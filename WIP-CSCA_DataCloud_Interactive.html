@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cox Science Center and Aquarium · CSCA Data Cloud</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cox-teal:   #00A99D;
+  --cox-coral:  #E5513A;
+  --cox-blue:   #2E7BB5;
+  --cox-amber:  #F5A623;
+  --cox-navy:   #1B2A4A;
+
+  --navy:#1B2A4A; --blue:#00A99D; --gold:#F5A623; --cream:#F8F8F6;
+  --ink:#1B2A4A;  --mist:#E8F4F3;
+  --edu:#1F497D;  --edu-bg:#E8F4FD;
+  --exh:#375623;  --exh-bg:#EBF3E8;
+  --mkt:#7F4F24;  --mkt-bg:#FFF4E6;
+  --com:#5B2D8E;  --com-bg:#F3E8FF;
+  --fin:#7F0000;  --fin-bg:#FFF0F0;
+  --ops:#1D5E3A;  --ops-bg:#E8FAF0;
+  --aqr:#0D4D80;  --aqr-bg:#E8F6FF;
+  --dev:#6B5500;  --dev-bg:#FFFAE8;
+  --gst:#6B005A;  --gst-bg:#FDE8F5;
+  --it:#2C2C2C;   --it-bg:#F5F5F5;
+  --b1:#1B2A4A;   --b1-bg:#E8F4F3;
+  --b2:#00A99D;   --b2-bg:#E0F5F3;
+  --b3:#E5513A;   --b3-bg:#FDE9E8;
+  --b4:#1B2A4A;   --b4-bg:#EEF1F7;
+  --b5:#F5A623;   --b5-bg:#FEF6E7;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{background:#1B2A4A;padding:0 2.5rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,0,0,.25)}
+.header-left{display:flex;align-items:center;gap:1rem}
+.logo-mark{display:none}
+header h1{font-family:'DM Serif Display',serif;font-size:1.2rem;color:#fff;letter-spacing:.02em}
+header h1 span{color:var(--gold)}
+.header-meta{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.5);text-align:right;line-height:1.7}
+
+/* TABS */
+.level-tabs{background:#1B2A4A;border-top:1px solid rgba(255,255,255,.08);display:flex;padding:0 2.5rem;gap:.2rem}
+.level-tab{padding:.65rem 1.4rem;cursor:pointer;font-size:.75rem;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.07em;text-transform:uppercase;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.level-tab:hover{color:rgba(255,255,255,.8)}
+.level-tab.active{color:#F5A623;border-bottom-color:#F5A623}
+
+/* LAYOUT */
+.dashboard{padding:2rem 2.5rem;max-width:1700px;margin:0 auto;display:none}
+.dashboard.active{display:block}
+.section-label{font-family:'DM Serif Display',serif;font-size:1.45rem;color:var(--navy);margin-bottom:.25rem}
+.section-sub{font-size:.8rem;color:#888;margin-bottom:1.5rem}
+
+/* GRIDS */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.2rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.2rem}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.2rem}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1.2rem}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:1rem;margin-bottom:1.2rem}
+.g32{display:grid;grid-template-columns:3fr 2fr;gap:1rem;margin-bottom:1.2rem}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.2rem}
+
+/* CARD */
+.card{background:#fff;border-radius:12px;padding:1.2rem 1.35rem;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.05);position:relative;overflow:hidden}
+.card-accent{position:absolute;top:0;left:0;right:0;height:4px;border-radius:12px 12px 0 0}
+.card h3{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:.5rem;margin-top:.1rem}
+.card-val{font-family:'DM Serif Display',serif;font-size:2rem;line-height:1;color:var(--navy);margin-bottom:.25rem}
+.card-val.med{font-size:1.6rem}
+.card-val.sm{font-size:1.2rem}
+.card-delta{font-size:.75rem;font-weight:500;display:inline-flex;align-items:center;gap:.2rem}
+.delta-up{color:#22863a} .delta-down{color:#d73a49} .delta-flat{color:#888}
+
+/* BADGE */
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.63rem;padding:.12rem .45rem;border-radius:4px;margin-bottom:.4rem;font-weight:500}
+.new-badge{background:#E2EFDA;color:#375623;font-family:'DM Sans',sans-serif;font-size:.6rem;font-weight:700;padding:.1rem .35rem;border-radius:3px;margin-left:.35rem;vertical-align:middle}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%}
+.chart-wrap canvas{width:100%!important}
+
+/* TABLE */
+.kpi-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.kpi-table th{text-align:left;font-size:.64rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#999;padding:.45rem .7rem;border-bottom:2px solid var(--mist)}
+.kpi-table td{padding:.55rem .7rem;border-bottom:1px solid var(--mist);vertical-align:middle}
+.kpi-table tr:last-child td{border-bottom:none}
+.kpi-table tr:hover td{background:var(--mist)}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:.35rem}
+.on-track{background:#22863a} .at-risk{background:#e36209} .off-track{background:#d73a49}
+
+/* PROGRESS */
+.prog-wrap{background:#f0f0f0;border-radius:99px;height:6px;overflow:hidden;min-width:60px}
+.prog-bar{height:100%;border-radius:99px;transition:width .8s ease}
+
+/* DEPT PILLS */
+.dept-pills{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1.4rem}
+.dept-pill{padding:.35rem .95rem;border-radius:99px;font-size:.72rem;font-weight:500;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.dept-pill.active{border-color:currentColor}
+
+/* PANELS */
+.dept-panels{display:none}
+.dept-panels.active{display:block}
+
+/* TILE HEADER */
+.tile-header{display:flex;align-items:center;gap:.65rem;margin-bottom:.9rem}
+.tile-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.tile-title{font-size:.82rem;font-weight:600;color:var(--navy)}
+.tile-sub{font-size:.68rem;color:#bbb}
+.weight-tag{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:#aaa;padding:.08rem .3rem;background:var(--mist);border-radius:3px;white-space:nowrap}
+
+/* SECTION DIVIDER */
+.sec-divider{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#bbb;padding:.4rem 0 .6rem;border-bottom:1px solid var(--mist);margin-bottom:.9rem}
+
+/* FADE */
+.fade-in{animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* CATEGORY SECTION */
+.cat-section{margin-bottom:1.4rem}
+.cat-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .6rem;border-radius:4px;display:inline-block;margin-bottom:.6rem}
+
+@media(max-width:1200px){
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .g5{grid-template-columns:repeat(3,1fr)}
+  .g3{grid-template-columns:repeat(2,1fr)}
+  .g21,.g12,.g32{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .dashboard{padding:1rem}
+}
+
+/* ═══════════════════════════════════════
+   DRILL SYSTEM
+═══════════════════════════════════════ */
+
+/* Drillable cursor & hover lift */
+.drillable{cursor:pointer;transition:transform .15s,box-shadow .15s}
+.drillable:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
+.drill-hint{position:absolute;top:.55rem;right:.65rem;font-size:.6rem;color:#d4c090;
+  font-family:'JetBrains Mono',monospace;opacity:0;transition:opacity .15s;pointer-events:none}
+.drillable:hover .drill-hint{opacity:1}
+tr.drillable-row{cursor:pointer}
+tr.drillable-row:hover td{background:rgba(201,168,76,.07)!important}
+tr.drillable-row td:first-child::before{content:'↗ ';font-size:.6rem;color:#ccc}
+tr.drillable-row:hover td:first-child::before{color:var(--gold)}
+
+/* Chart point hover cursor */
+.chart-wrap canvas{cursor:default}
+
+/* Overlay */
+#drillOverlay{position:fixed;inset:0;background:rgba(15,20,40,.5);
+  z-index:800;opacity:0;pointer-events:none;transition:opacity .28s;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#drillOverlay.open{opacity:1;pointer-events:all}
+
+/* Slide-in panel */
+#drillPanel{position:fixed;top:0;right:0;width:560px;max-width:100vw;height:100vh;
+  background:#fff;z-index:801;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);
+  box-shadow:-6px 0 50px rgba(0,0,0,.18)}
+#drillPanel.open{transform:translateX(0)}
+
+/* Panel header */
+.dp-header{flex-shrink:0;padding:1.1rem 1.4rem .9rem;
+  border-bottom:2px solid var(--mist);display:flex;align-items:flex-start;gap:.8rem}
+.dp-header-inner{flex:1;min-width:0}
+.dp-breadcrumb{font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:#bbb;margin-bottom:.35rem;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap}
+.dp-breadcrumb .crumb-active{color:var(--navy)}
+.dp-title{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--navy);line-height:1.25;margin-bottom:.2rem}
+.dp-sub{font-size:.72rem;color:#aaa;line-height:1.4}
+.dp-close{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--mist);
+  border:none;cursor:pointer;font-size:1rem;color:#888;display:flex;align-items:center;
+  justify-content:center;transition:all .15s;margin-top:.1rem}
+.dp-close:hover{background:#e0e0e0;color:#333}
+
+/* Panel body */
+.dp-body{flex:1;overflow-y:auto;padding:1.2rem 1.4rem 2rem}
+
+/* Panel sections */
+.dp-section{margin-bottom:1.3rem}
+.dp-section-title{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:#ccc;padding-bottom:.35rem;border-bottom:1px solid var(--mist);margin-bottom:.7rem}
+
+/* Status pill */
+.dp-status{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem;
+  border-radius:99px;font-size:.76rem;font-weight:600}
+.dp-status.on{background:#E2EFDA;color:#375623}
+.dp-status.risk{background:#FFF2CC;color:#7F4F00}
+.dp-status.off{background:#FCE4D6;color:#7F0000}
+
+/* KV rows */
+.dp-kv{display:flex;justify-content:space-between;align-items:flex-start;
+  padding:.42rem 0;border-bottom:1px solid #f4f4f4;gap:.8rem}
+.dp-kv:last-child{border:none}
+.dp-kl{font-size:.75rem;color:#999;flex-shrink:0}
+.dp-kv-val{font-size:.8rem;font-weight:600;color:var(--ink);text-align:right}
+
+/* Formula block */
+.dp-formula{font-family:'JetBrains Mono',monospace;font-size:.7rem;
+  background:#f7f8fa;border:1px solid #eaecf0;border-radius:7px;
+  padding:.75rem 1rem;line-height:1.7;color:#1a1a2e;white-space:pre-wrap;word-break:break-word}
+
+/* Description */
+.dp-desc{font-size:.8rem;line-height:1.65;color:#555}
+
+/* Chart inside panel */
+.dp-chart{height:180px;position:relative;margin-top:.5rem}
+
+/* Metric rows inside board tile drill */
+.dp-metric-row{padding:.55rem .7rem;border-radius:8px;margin-bottom:.35rem;
+  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  background:var(--mist);font-size:.78rem;cursor:pointer;transition:background .15s}
+.dp-metric-row:hover{background:#dde3f0}
+.dp-metric-row .mr-left{flex:1;min-width:0}
+.dp-metric-row .mr-dept{font-size:.65rem;color:#888;margin-bottom:.1rem}
+.dp-metric-row .mr-name{font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dp-metric-row .mr-right{text-align:right;flex-shrink:0}
+.dp-metric-row .mr-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700}
+.dp-metric-row .mr-wt{font-size:.62rem;color:#bbb}
+
+/* Status dots summary bar */
+.dp-score-bar{display:flex;gap:.5rem;margin-bottom:.9rem}
+.dp-score-pill{flex:1;padding:.45rem .6rem;border-radius:8px;text-align:center;font-size:.74rem;font-weight:600}
+.dp-score-pill.on{background:#E2EFDA;color:#375623}
+.dp-score-pill.risk{background:#FFF2CC;color:#7F4F00}
+.dp-score-pill.off{background:#FCE4D6;color:#7F0000}
+
+/* Chart point tooltip custom table */
+.dp-pt-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.dp-pt-table th{font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:#bbb;padding:.35rem .6rem;border-bottom:1px solid var(--mist)}
+.dp-pt-table td{padding:.5rem .6rem;border-bottom:1px solid #f4f4f4}
+.dp-pt-table tr:last-child td{border:none}
+.dp-pt-table tr:hover td{background:var(--mist)}
+
+/* Back button */
+.dp-back{display:inline-flex;align-items:center;gap:.4rem;font-size:.74rem;
+  font-weight:600;color:var(--blue);cursor:pointer;padding:.3rem 0;margin-bottom:.8rem;
+  background:none;border:none;text-decoration:none}
+.dp-back:hover{color:var(--navy)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="https://www.coxsciencecenter.org/sites/default/files/Cox_Science_logo_color.png" alt="Cox Science Center and Aquarium" style="height:44px;width:auto;display:block;filter:brightness(0) invert(1)">
+    <div style="width:1px;height:36px;background:rgba(255,255,255,.15);margin:0 .4rem"></div>
+    <div>
+      <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:#fff;letter-spacing:.02em;line-height:1.2">CSCA Data Cloud</div>
+      <div style="font-size:.65rem;color:rgba(255,255,255,.5);letter-spacing:.05em;margin-top:.1rem">FY2021–2024 · 134 Metrics · 10 Departments</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:1.2rem">
+    <div style="display:flex;gap:.35rem">
+      <div style="width:10px;height:10px;border-radius:50%;background:#00A99D"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#E5513A"></div>
+      <div style="width:10px;height:10px;border-radius:50%;background:#2E7BB5"></div>
+    </div>
+    <div class="header-meta">Cox Science Center and Aquarium<br>Strategic KPI Framework · v3</div>
+  </div>
+</header>
+
+<nav class="level-tabs">
+  <div class="level-tab active" onclick="switchLevel('cover',this)">🏠 Cover</div>
+  <div class="level-tab" onclick="switchLevel('board',this)">🏛 Board Level</div>
+  <div class="level-tab" onclick="switchLevel('dept',this)">🏢 Department Level</div>
+  <div class="level-tab" onclick="switchLevel('lob',this)">📊 LOB Detail</div>
+</nav>
+
+<!-- COVER PAGE -->
+<div class="dashboard active fade-in" id="cover">
+  <div style="min-height:calc(100vh - 112px);display:flex;align-items:center;justify-content:center;padding:3rem 2rem">
+    <div style="max-width:780px;width:100%;text-align:center">
+
+      <div style="margin-bottom:2.5rem">
+        <img src="https://www.coxsciencecenter.org/sites/default/files/Cox_Science_logo_color.png" alt="Cox Science Center and Aquarium" style="height:140px;width:auto;display:inline-block">
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#00A99D;margin-bottom:.8rem">Organizational Performance Framework</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:3rem;color:#1B2A4A;line-height:1.1;margin-bottom:.6rem">CSCA Data Cloud</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.4rem;color:#888;font-style:italic">FY2021 – FY2024</div>
+      </div>
+
+      <div style="display:flex;height:5px;border-radius:99px;overflow:hidden;margin:2rem auto;max-width:320px">
+        <div style="flex:1;background:#00A99D"></div>
+        <div style="flex:1;background:#E5513A"></div>
+        <div style="flex:1;background:#F5A623"></div>
+        <div style="flex:1;background:#2E7BB5"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin:2.5rem 0">
+        <div style="background:#fff;border-radius:12px;padding:1.4rem 1rem;box-shadow:0 2px 16px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.05)">
+          <div style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:#00A99D;line-height:1">134</div>
+          <div style="font-size:.72rem;color:#888;margin-top:.3rem;font-weight:500">KPIs & Metrics</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:1.4rem 1rem;box-shadow:0 2px 16px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.05)">
+          <div style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:#E5513A;line-height:1">10</div>
+          <div style="font-size:.72rem;color:#888;margin-top:.3rem;font-weight:500">Departments</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:1.4rem 1rem;box-shadow:0 2px 16px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.05)">
+          <div style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:#F5A623;line-height:1">3</div>
+          <div style="font-size:.72rem;color:#888;margin-top:.3rem;font-weight:500">Dashboard Levels</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:1.4rem 1rem;box-shadow:0 2px 16px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.05)">
+          <div style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:#1B2A4A;line-height:1">13</div>
+          <div style="font-size:.72rem;color:#888;margin-top:.3rem;font-weight:500">Dashboard Tiles</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2.5rem;text-align:left">
+        <div style="background:#fff;border-radius:12px;padding:1.2rem;box-shadow:0 2px 12px rgba(0,0,0,.05);border-top:4px solid #00A99D">
+          <div style="font-weight:700;font-size:.82rem;color:#1B2A4A;margin-bottom:.4rem">🏛 Board Level</div>
+          <div style="font-size:.74rem;color:#888;line-height:1.5">5 strategic tiles for board reporting. Financial health, mission impact, guest experience, fundraising, and people & org health.</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:1.2rem;box-shadow:0 2px 12px rgba(0,0,0,.05);border-top:4px solid #E5513A">
+          <div style="font-weight:700;font-size:.82rem;color:#1B2A4A;margin-bottom:.4rem">🏢 Department Level</div>
+          <div style="font-size:.74rem;color:#888;line-height:1.5">8 department tiles per team. Reviewed monthly by VP/Director. Includes multi-year trends and drillable metric cards.</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:1.2rem;box-shadow:0 2px 12px rgba(0,0,0,.05);border-top:4px solid #F5A623">
+          <div style="font-weight:700;font-size:.82rem;color:#1B2A4A;margin-bottom:.4rem">📊 LOB Detail</div>
+          <div style="font-size:.74rem;color:#888;line-height:1.5">Line-of-business operational detail for department heads. Weekly/monthly cadence. Full 134-metric reference table.</div>
+        </div>
+      </div>
+
+      <button onclick="switchLevel('board',document.querySelectorAll('.level-tab')[1])"
+        style="background:#1B2A4A;color:#fff;border:none;border-radius:99px;padding:.85rem 2.5rem;
+        font-size:.85rem;font-weight:600;cursor:pointer;letter-spacing:.04em;
+        box-shadow:0 4px 20px rgba(27,42,74,.25);transition:all .2s"
+        onmouseover="this.style.background='#00A99D'" onmouseout="this.style.background='#1B2A4A'">
+        Enter Dashboard →
+      </button>
+
+      <div style="margin-top:2.5rem;font-size:.68rem;color:#ccc;letter-spacing:.05em">
+        CONFIDENTIAL · Cox Science Center and Aquarium · CSCA Data Cloud · FY2024
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ════════════════════════════ BOARD ════════════════════════════ -->
+<div class="dashboard fade-in" id="board">
+  <div class="section-label">Board Dashboard</div>
+  <div class="section-sub">5 strategic tiles · FY2021–2024 multi-year view · 134 KPIs across 10 departments</div>
+
+  <!-- Hero KPIs -->
+  <div class="g5">
+    <div class="card">
+      <div class="card-accent" style="background:var(--b1)"></div>
+      <div class="badge" style="background:var(--b1-bg);color:var(--b1)">B1 · Financial Health</div>
+      <h3>Org Budget Variance</h3>
+      <div class="card-val">+2.8%</div>
+      <div class="card-delta delta-up">▲ Ahead of budget · Per Cap $24.80</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b2)"></div>
+      <div class="badge" style="background:var(--b2-bg);color:var(--b2)">B2 · Mission Impact</div>
+      <h3>Total Students Served</h3>
+      <div class="card-val">18,420</div>
+      <div class="card-delta delta-up">▲ 8.1% · 68% paid · 32% grant</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b3)"></div>
+      <div class="badge" style="background:var(--b3-bg);color:var(--b3)">B3 · Guest Experience</div>
+      <h3>Net Promoter Score</h3>
+      <div class="card-val">62</div>
+      <div class="card-delta delta-up">▲ +4 pts · Benchmark ≥50 ✓</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b4)"></div>
+      <div class="badge" style="background:var(--b4-bg);color:var(--b4)">B4 · Fundraising</div>
+      <h3>Capital Campaign</h3>
+      <div class="card-val">89%</div>
+      <div class="card-delta delta-flat">$124.6M raised · $15.4M remaining</div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b5)"></div>
+      <div class="badge" style="background:var(--b5-bg);color:var(--b5)">B5 · People & Org</div>
+      <h3>Turnover Rate</h3>
+      <div class="card-val">28%</div>
+      <div class="card-delta delta-down">▼ Sector avg 26% · Watch</div>
+    </div>
+  </div>
+
+  <!-- B1 Financial Health -->
+  <div class="g32">
+    <div class="card">
+      <div class="card-accent" style="background:var(--b1)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b1-bg)">💰</div>
+        <div><div class="tile-title">B1 · Financial Health &amp; Sustainability</div>
+        <div class="tile-sub">Budget vs Actual · Per Cap · Revenue Mix · Rolling Forecast · 4-Year</div></div>
+      </div>
+      <div class="chart-wrap" style="height:210px"><canvas id="b1Chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b1)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b1-bg)">🥧</div>
+        <div><div class="tile-title">Revenue Mix &amp; Recognition</div>
+        <div class="tile-sub">Earned vs. Contributed · FY2024</div></div>
+      </div>
+      <div class="chart-wrap" style="height:160px"><canvas id="revMixChart"></canvas></div>
+      <div style="margin-top:.5rem;font-size:.76rem;color:#888">Earned target: ≥55% &nbsp;·&nbsp; <span style="color:var(--b1);font-weight:600">Current: 61% ✓</span></div>
+      <div style="margin-top:.4rem">
+        <div style="font-size:.72rem;color:#888;margin-bottom:.3rem">Deferred Revenue Balance</div>
+        <div class="prog-wrap"><div class="prog-bar" style="width:38%;background:var(--b1)"></div></div>
+        <div style="font-size:.7rem;color:#aaa;margin-top:.2rem">$1.24M deferred · $3.2M recognized YTD</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B2 Mission Impact -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-accent" style="background:var(--b2)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b2-bg)">🌱</div>
+        <div><div class="tile-title">B2 · Mission Impact &amp; Reach</div>
+        <div class="tile-sub">Students (Paid + Grant) · Members · Program Growth · Outcomes · 4-Year</div></div>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="b2Chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b2)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b2-bg)">📐</div>
+        <div><div class="tile-title">Learning Outcomes &amp; Membership Health</div>
+        <div class="tile-sub">Assessment improvement · Member count · Renewal rate</div></div>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="b2OutcomesChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- B3 + B5 -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-accent" style="background:var(--b3)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b3-bg)">⭐</div>
+        <div><div class="tile-title">B3 · Guest Experience</div>
+        <div class="tile-sub">NPS · Satisfaction · Dwell Time · Exhibit Uptime · 4-Year</div></div>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="b3Chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b5)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b5-bg)">👤</div>
+        <div><div class="tile-title">B5 · People &amp; Org Health</div>
+        <div class="tile-sub">Turnover · Safety · Compliance Training · Vacancy · Payroll · 4-Year</div></div>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="b5Chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- B4 Fundraising -->
+  <div class="g21">
+    <div class="card">
+      <div class="card-accent" style="background:var(--b4)"></div>
+      <div class="tile-header">
+        <div class="tile-icon" style="background:var(--b4-bg)">🎯</div>
+        <div><div class="tile-title">B4 · Fundraising &amp; Campaign Progress</div>
+        <div class="tile-sub">All campaigns · Donor pipeline · Grant delivery · VIP visits · 4-Year</div></div>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="b4Chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-accent" style="background:var(--b4)"></div>
+      <h3>Campaign Scoreboard</h3>
+      <table class="kpi-table">
+        <thead><tr><th>Campaign</th><th>Goal</th><th>Raised</th><th>%</th></tr></thead>
+        <tbody>
+          <tr><td>Capital Campaign</td><td>$140M</td><td>$124.6M</td><td><div class="prog-wrap"><div class="prog-bar" style="width:89%;background:var(--b4)"></div></div></td></tr>
+          <tr><td>Endowment</td><td>TBD</td><td>–$3.8M gap</td><td><div class="prog-wrap"><div class="prog-bar" style="width:72%;background:var(--b4)"></div></div></td></tr>
+          <tr><td>Annual Fund FY24</td><td>$4.2M</td><td>$3.9M</td><td><div class="prog-wrap"><div class="prog-bar" style="width:93%;background:var(--b4)"></div></div></td></tr>
+          <tr><td>Grant Revenue</td><td>$1.1M</td><td>$1.05M</td><td><div class="prog-wrap"><div class="prog-bar" style="width:95%;background:#22863a"></div></div></td></tr>
+          <tr><td>Smarty Party</td><td>$320K</td><td>$298K</td><td><div class="prog-wrap"><div class="prog-bar" style="width:93%;background:var(--b4)"></div></div></td></tr>
+          <tr><td>Donor Retention</td><td>≥60%</td><td>64%</td><td><div class="prog-wrap"><div class="prog-bar" style="width:64%;background:#22863a"></div></div></td></tr>
+          <tr><td>VIP Visits (QTD)</td><td>12</td><td>9</td><td><div class="prog-wrap"><div class="prog-bar" style="width:75%;background:var(--gold)"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Board KPI Master Table -->
+  <div class="card">
+    <div class="tile-header">
+      <div class="tile-icon" style="background:var(--mist)">📋</div>
+      <div><div class="tile-title">Board KPI Master Table — FY2024 Snapshot</div>
+      <div class="tile-sub">All board-surfaced metrics with tile, weight, and status · <span style="color:#d73a49">Red = off track</span> · <span style="color:#e36209">Amber = at risk</span> · <span style="color:#22863a">Green = on track</span></div></div>
+    </div>
+    <table class="kpi-table">
+      <thead><tr><th>Tile</th><th>Department</th><th>KPI</th><th>FY24</th><th>Target</th><th>Weight</th><th>Status</th></tr></thead>
+      <tbody id="boardTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════ DEPT ════════════════════════════ -->
+<div class="dashboard" id="dept">
+  <div class="section-label">Department Dashboards</div>
+  <div class="section-sub">Select a department · Tiles, KPIs, multi-year trends, and new v3 additions highlighted</div>
+  <div class="dept-pills" id="deptPills"></div>
+
+  <!-- EDUCATION -->
+  <div class="dept-panels active" id="panel-education">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D1 · Financial</div>
+        <h3>Revenue vs Budget</h3><div class="card-val med">+6.2%</div>
+        <div class="card-delta delta-up">▲ Ahead of budget</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D3 · Programs</div>
+        <h3>Students — Paid</h3><div class="card-val med">12,680</div>
+        <div class="card-delta delta-up">▲ 9.1% YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D3 · Programs</div>
+        <h3>Students — Grant-Funded</h3><div class="card-val med">5,740</div>
+        <div class="card-delta delta-up">▲ Grant compliance ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D3 · Programs</div>
+        <h3>Services Delivered vs Sched.<span class="new-badge">NEW</span></h3>
+        <div class="card-val med">97.2%</div>
+        <div class="card-delta delta-up">▲ Target ≥95% ✓</div></div>
+    </div>
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D3 · Programs</div>
+        <h3>Participation vs Capacity</h3><div class="card-val med">84%</div>
+        <div class="card-delta delta-up">▲ Target ≥80% ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D4 · Experience</div>
+        <h3>Satisfaction Score</h3><div class="card-val med">4.4/5</div>
+        <div class="card-delta delta-up">▲ Target ≥4.2 ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D3 · Outcomes<span class="new-badge">NEW</span></div>
+        <h3>Pre/Post Assessment</h3><div class="card-val med">74%</div>
+        <div class="card-delta delta-up">▲ 74% show measurable gain</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <div class="badge" style="background:var(--edu-bg);color:var(--edu)">D1 · Grant Mgmt<span class="new-badge">NEW</span></div>
+        <h3>Grant Delivery Rate</h3><div class="card-val med">96%</div>
+        <div class="card-delta delta-up">▲ Commitments on track</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <h3>Students Served — Paid vs. Grant Split — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="eduStudentsChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <h3>Learning Outcomes &amp; Delivery Rate — 4-Year <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="eduOutcomesChart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <h3>Resource Utilization — Educators &amp; Rooms <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="eduResourceChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--edu)"></div>
+        <h3>Grant Pipeline — Booked / Delivered / Remaining <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="eduGrantChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card"><h3>Education KPI Detail — All Tiles</h3>
+      <table class="kpi-table"><thead><tr><th>Tile</th><th>Category</th><th>KPI</th><th>FY21</th><th>FY22</th><th>FY23</th><th>FY24</th><th>Target</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D1</span></td><td>Financial</td><td>Revenue vs Budget</td><td>+1.2%</td><td>-3.4%</td><td>+4.1%</td><td>+6.2%</td><td>≥0%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D1</span></td><td>Grant Mgmt <span class="new-badge">NEW</span></td><td>Grant Reimbursement Status</td><td>—</td><td>—</td><td>$42K aging</td><td>$18K aging</td><td>&lt;$50K</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D1</span></td><td>Grant Mgmt <span class="new-badge">NEW</span></td><td>Grant Commitments (Booked/Del/Rem)</td><td>—</td><td>—</td><td>88%</td><td>96%</td><td>≥95%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Students Served</td><td>Students — Paid Programs</td><td>8,200</td><td>9,400</td><td>11,620</td><td>12,680</td><td>Growth</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Students Served</td><td>Students — Grant-Funded</td><td>3,900</td><td>4,450</td><td>5,410</td><td>5,740</td><td>≥ Commitment</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Students Served</td><td>Return Rate</td><td>24%</td><td>27%</td><td>30%</td><td>33%</td><td>≥30%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Service Delivery <span class="new-badge">NEW</span></td><td>Services Delivered vs. Scheduled</td><td>—</td><td>91%</td><td>94%</td><td>97.2%</td><td>≥95%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Service Delivery <span class="new-badge">NEW</span></td><td>On-Site vs. Outreach Mix</td><td>—</td><td>82/18%</td><td>78/22%</td><td>74/26%</td><td>↑ Outreach</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Capacity</td><td>Participation vs. Capacity</td><td>71%</td><td>78%</td><td>81%</td><td>84%</td><td>≥80%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Outcomes <span class="new-badge">NEW</span></td><td>Pre/Post Assessment Improvement</td><td>—</td><td>58%</td><td>68%</td><td>74%</td><td>≥70%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D3</span></td><td>Outcomes <span class="new-badge">NEW</span></td><td>Outcomes by Program &amp; Grant</td><td>—</td><td>—</td><td>72%</td><td>81%</td><td>≥80%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D4</span></td><td>Satisfaction</td><td>Program Satisfaction Score</td><td>4.1</td><td>4.2</td><td>4.3</td><td>4.4</td><td>≥4.2</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D5</span></td><td>Resource <span class="new-badge">NEW</span></td><td>Room &amp; Equipment Utilization</td><td>—</td><td>61%</td><td>68%</td><td>74%</td><td>≥70%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D5</span></td><td>Resource <span class="new-badge">NEW</span></td><td>Scheduling Conflicts</td><td>—</td><td>18</td><td>12</td><td>7</td><td>→ 0</td><td><span class="status-dot on-track"></span>Improving</td></tr>
+        <tr><td><span class="badge" style="background:var(--edu-bg);color:var(--edu)">D6</span></td><td>Resource <span class="new-badge">NEW</span></td><td>Educator Utilization Rate</td><td>—</td><td>71%</td><td>76%</td><td>79%</td><td>75–85%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- DEVELOPMENT -->
+  <div class="dept-panels" id="panel-development">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <div class="badge" style="background:var(--dev-bg);color:var(--dev)">D7 · Fundraising</div>
+        <h3>Annual Fund % to Goal</h3><div class="card-val med">93%</div>
+        <div class="card-delta delta-at-risk">$3.9M of $4.2M</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <div class="badge" style="background:var(--dev-bg);color:var(--dev)">D7 · Donor Health</div>
+        <h3>Donor Retention Rate</h3><div class="card-val med">64%</div>
+        <div class="card-delta delta-up">▲ Target ≥60% ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <div class="badge" style="background:var(--dev-bg);color:var(--dev)">D7 · Campaign<span class="new-badge">NEW</span></div>
+        <h3>Avg Gift Size</h3><div class="card-val med">$1,240</div>
+        <div class="card-delta delta-up">▲ +$180 YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <div class="badge" style="background:var(--dev-bg);color:var(--dev)">D7 · Stewardship<span class="new-badge">NEW</span></div>
+        <h3>VIP Visits (QTD)</h3><div class="card-val med">9 / 12</div>
+        <div class="card-delta delta-flat">75% of quarterly target</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <h3>Contributed Revenue by Stream — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="devTrendChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <h3>Donor Health — Retention, Re-engagement &amp; Recapture <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="devDonorChart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <h3>FY2024 Fundraising Portfolio Mix</h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="devMixChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--dev)"></div>
+        <h3>Campaign Progress vs. Goal by Type <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="devCampaignChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card"><h3>Development KPI Detail</h3>
+      <table class="kpi-table"><thead><tr><th>Tile</th><th>Category</th><th>KPI</th><th>FY22</th><th>FY23</th><th>FY24</th><th>Target</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Fundraising</td><td>Annual Fund vs Goal</td><td>$3.1M</td><td>$3.5M</td><td>$3.9M / $4.2M</td><td>100%</td><td><span class="status-dot at-risk"></span>At Risk</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Fundraising</td><td>Capital Campaign %</td><td>80%</td><td>85%</td><td>89%</td><td>$140M</td><td><span class="status-dot at-risk"></span>At Risk</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Campaign <span class="new-badge">NEW</span></td><td>Avg Gift Size</td><td>$880</td><td>$1,060</td><td>$1,240</td><td>Growth</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Campaign <span class="new-badge">NEW</span></td><td>Lifetime Giving — $100K+ HHs</td><td>48</td><td>54</td><td>61</td><td>Growth</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Donor Health</td><td>Donor Retention Rate</td><td>58%</td><td>61%</td><td>64%</td><td>≥60%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Donor Health <span class="new-badge">NEW</span></td><td>Lapsed Donor Re-engagement Rate</td><td>—</td><td>8.2%</td><td>11.4%</td><td>≥10%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Donor Health <span class="new-badge">NEW</span></td><td>Donor Recapture Rate (≥2yr lapse)</td><td>—</td><td>3.1%</td><td>4.8%</td><td>≥4%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Grants Mgmt <span class="new-badge">NEW</span></td><td>Grant Reimbursement Outstanding</td><td>—</td><td>$68K</td><td>$31K</td><td>&lt;$50K</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Grants Mgmt <span class="new-badge">NEW</span></td><td>Grant Delivery vs. Commitment</td><td>—</td><td>88%</td><td>96%</td><td>≥95%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Stewardship <span class="new-badge">NEW</span></td><td>VIP Visits Identified (QTD)</td><td>—</td><td>—</td><td>9 / 12</td><td>12/qtr</td><td><span class="status-dot at-risk"></span>At Risk</td></tr>
+        <tr><td><span class="badge" style="background:var(--dev-bg);color:var(--dev)">D7</span></td><td>Stewardship <span class="new-badge">NEW</span></td><td>Impact Metrics (Students/Outcomes)</td><td>—</td><td>—</td><td>18,420 / 74%</td><td>Growth</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- FINANCE & HR -->
+  <div class="dept-panels" id="panel-finance-hr">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <div class="badge" style="background:var(--fin-bg);color:var(--fin)">D1 · Financial</div>
+        <h3>Org Budget Variance</h3><div class="card-val med">+2.8%</div>
+        <div class="card-delta delta-up">▲ Ahead · Per Cap $24.80</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <div class="badge" style="background:var(--fin-bg);color:var(--fin)">D1 · Revenue<span class="new-badge">NEW</span></div>
+        <h3>Revenue vs. Forecast</h3><div class="card-val med">+1.4%</div>
+        <div class="card-delta delta-up">▲ Ahead of rolling forecast</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <div class="badge" style="background:var(--fin-bg);color:var(--fin)">D6 · People</div>
+        <h3>Turnover Rate</h3><div class="card-val med">28%</div>
+        <div class="card-delta delta-down">▼ Above 26% sector avg</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <div class="badge" style="background:var(--fin-bg);color:var(--fin)">D6 · Compliance<span class="new-badge">NEW</span></div>
+        <h3>Compliance Training</h3><div class="card-val med">88%</div>
+        <div class="card-delta delta-down">▼ Target 100% · 12% overdue</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <h3>Revenue Trends — Budget vs Actual vs Forecast — 4-Year <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="finRevChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <h3>Revenue Mix &amp; Seasonality <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="finMixChart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <h3>Workforce Health — Turnover Split · Headcount vs Plan · OT <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="finHrChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--fin)"></div>
+        <h3>Payroll Trends &amp; Compliance Training <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="finPayrollChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card"><h3>Finance &amp; HR KPI Detail</h3>
+      <table class="kpi-table"><thead><tr><th>Tile</th><th>Category</th><th>KPI</th><th>FY22</th><th>FY23</th><th>FY24</th><th>Target</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D1</span></td><td>Financial</td><td>Org Budget vs Actual</td><td>-2.1%</td><td>+3.4%</td><td>+2.8%</td><td>≥0%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D1</span></td><td>Revenue <span class="new-badge">NEW</span></td><td>Revenue vs. Rolling Forecast</td><td>—</td><td>+0.8%</td><td>+1.4%</td><td>≥0%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D1</span></td><td>Revenue <span class="new-badge">NEW</span></td><td>Refund Rate % of Gross Revenue</td><td>—</td><td>1.4%</td><td>0.9%</td><td>&lt;2%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D1</span></td><td>Reconciliation <span class="new-badge">NEW</span></td><td>Time to Close (Business Days)</td><td>—</td><td>7.2</td><td>5.8</td><td>≤5 days</td><td><span class="status-dot at-risk"></span>At Risk</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D1</span></td><td>Reconciliation <span class="new-badge">NEW</span></td><td>Reconciliation Exceptions</td><td>—</td><td>14</td><td>9</td><td>→ 0</td><td><span class="status-dot at-risk"></span>Improving</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D6</span></td><td>Turnover</td><td>Total Turnover Rate</td><td>31%</td><td>29%</td><td>28%</td><td>≤26%</td><td><span class="status-dot off-track"></span>Off Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D6</span></td><td>Turnover <span class="new-badge">NEW</span></td><td>Voluntary Turnover</td><td>—</td><td>21%</td><td>20%</td><td>≤18%</td><td><span class="status-dot off-track"></span>Off Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D6</span></td><td>Turnover <span class="new-badge">NEW</span></td><td>Involuntary Turnover</td><td>—</td><td>8%</td><td>8%</td><td>Monitor</td><td><span class="status-dot at-risk"></span>Monitor</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D6</span></td><td>Stability <span class="new-badge">NEW</span></td><td>Headcount vs. Plan</td><td>—</td><td>-4 FTE</td><td>-6 FTE</td><td>0 variance</td><td><span class="status-dot off-track"></span>Off Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D6</span></td><td>Readiness <span class="new-badge">NEW</span></td><td>Compliance Training Completion</td><td>—</td><td>79%</td><td>88%</td><td>100%</td><td><span class="status-dot off-track"></span>Off Track</td></tr>
+        <tr><td><span class="badge" style="background:var(--fin-bg);color:var(--fin)">D6</span></td><td>Cost <span class="new-badge">NEW</span></td><td>Payroll as % of Revenue</td><td>—</td><td>48%</td><td>46%</td><td>≤48%</td><td><span class="status-dot on-track"></span>On Track</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- OPERATIONS -->
+  <div class="dept-panels" id="panel-operations">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <div class="badge" style="background:var(--ops-bg);color:var(--ops)">D1 · Financial</div>
+        <h3>Ops Expenses vs Budget</h3><div class="card-val med">-1.4%</div>
+        <div class="card-delta delta-up">▲ Under budget</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <div class="badge" style="background:var(--ops-bg);color:var(--ops)">D5 · Operations</div>
+        <h3>Safety Incident Rate</h3><div class="card-val med">2.8</div>
+        <div class="card-delta delta-up">▲ Benchmark &lt;3.5 ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <div class="badge" style="background:var(--ops-bg);color:var(--ops)">D5 · Tickets<span class="new-badge">NEW</span></div>
+        <h3>Open Ticket Count</h3><div class="card-val med">34</div>
+        <div class="card-delta delta-flat">18 &lt;24h · 12 1–3d · 4 &gt;3d</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <div class="badge" style="background:var(--ops-bg);color:var(--ops)">D5 · Projects<span class="new-badge">NEW</span></div>
+        <h3>Active Projects — At Risk</h3><div class="card-val med">2 / 11</div>
+        <div class="card-delta delta-at-risk">2 projects flagged at risk</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <h3>Safety &amp; Ticket Resolution — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="opsSafetyChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <h3>Ticket Volume by Category &amp; Emergency Ratio <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="opsTicketChart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <h3>Project Portfolio — Budget vs Actual &amp; Milestones <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="opsProjChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--ops)"></div>
+        <h3>Maintenance Workload by Facility Area <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="opsAreaChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKETING -->
+  <div class="dept-panels" id="panel-marketing">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <div class="badge" style="background:var(--mkt-bg);color:var(--mkt)">D8 · Digital</div>
+        <h3>Ticket Conversion Rate</h3><div class="card-val med">4.8%</div>
+        <div class="card-delta delta-up">▲ +0.7% YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <div class="badge" style="background:var(--mkt-bg);color:var(--mkt)">D8 · Attribution<span class="new-badge">NEW</span></div>
+        <h3>Mktg-Influenced Admissions</h3><div class="card-val med">62%</div>
+        <div class="card-delta delta-up">▲ +5% YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <div class="badge" style="background:var(--mkt-bg);color:var(--mkt)">D8 · Attribution<span class="new-badge">NEW</span></div>
+        <h3>Cost per Admission</h3><div class="card-val med">$4.20</div>
+        <div class="card-delta delta-up">▲ Down from $5.60 prior year</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <div class="badge" style="background:var(--mkt-bg);color:var(--mkt)">D8 · Events<span class="new-badge">NEW</span></div>
+        <h3>Post-Event Re-engagement</h3><div class="card-val med">18%</div>
+        <div class="card-delta delta-up">▲ Return within 90 days</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <h3>Digital Funnel — Visitors → Conversion → Admissions — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="mktFunnelChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <h3>Cost per Admission by Channel <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="mktCostChart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <h3>Segment Engagement — Families · Repeat · Camps <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="mktSegChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--mkt)"></div>
+        <h3>Digital Revenue Channel Mix — FY2024</h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="mktMixChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IT -->
+  <div class="dept-panels" id="panel-it">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <div class="badge" style="background:var(--it-bg);color:var(--it)">D5 · Reliability</div>
+        <h3>Core System Uptime</h3><div class="card-val med">97.4%</div>
+        <div class="card-delta delta-up">▲ Target ≥95% ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <div class="badge" style="background:var(--it-bg);color:var(--it)">D5 · Reliability<span class="new-badge">NEW</span></div>
+        <h3>Network Uptime</h3><div class="card-val med">99.1%</div>
+        <div class="card-delta delta-up">▲ Target ≥99% ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <div class="badge" style="background:var(--it-bg);color:var(--it)">D5 · Security<span class="new-badge">NEW</span></div>
+        <h3>Security Incidents (P1/P2)</h3><div class="card-val med">0</div>
+        <div class="card-delta delta-up">▲ Zero high-severity ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <div class="badge" style="background:var(--it-bg);color:var(--it)">D5 · Expansion<span class="new-badge">NEW</span></div>
+        <h3>Integration Health</h3><div class="card-val med">94%</div>
+        <div class="card-delta delta-at-risk">2 integrations degraded</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <h3>System &amp; Network Uptime by Platform — 4-Year <span class="new-badge">EXPANDED</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="itUptimeChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <h3>Incident Management — Tickets by Category &amp; Severity <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="itIncidentChart"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <h3>Security &amp; Governance — Incidents &amp; Shadow IT <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="itSecurityChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--it)"></div>
+        <h3>Expansion Readiness — Cloud Migration &amp; SPOF <span class="new-badge">NEW</span></h3>
+        <div class="chart-wrap" style="height:190px"><canvas id="itExpansionChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXHIBITS -->
+  <div class="dept-panels" id="panel-exhibits">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--exh)"></div>
+        <div class="badge" style="background:var(--exh-bg);color:var(--exh)">D5 · Operations</div>
+        <h3>Exhibit Uptime</h3><div class="card-val med">96.8%</div>
+        <div class="card-delta delta-up">▲ Target ≥95% ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--exh)"></div>
+        <div class="badge" style="background:var(--exh-bg);color:var(--exh)">D5 · Operations</div>
+        <h3>Mean Time to Repair</h3><div class="card-val med">1.4 hrs</div>
+        <div class="card-delta delta-up">▲ Target &lt;2 hrs ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--exh)"></div>
+        <div class="badge" style="background:var(--exh-bg);color:var(--exh)">D2 · Attendance</div>
+        <h3>Guest Dwell Time</h3><div class="card-val med">4.2 min</div>
+        <div class="card-delta delta-up">▲ +0.6 min YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--exh)"></div>
+        <div class="badge" style="background:var(--exh-bg);color:var(--exh)">D5 · Operations</div>
+        <h3>Ticket Resolution ≤24h</h3><div class="card-val med">97.1%</div>
+        <div class="card-delta delta-up">▲ Target ≥95% ✓</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--exh)"></div>
+        <h3>Exhibit Uptime &amp; MTTR — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="exhUptimeChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--exh)"></div>
+        <h3>Space Utilisation &amp; Guest Interaction Rate</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="exhEngageChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUEST SERVICES -->
+  <div class="dept-panels" id="panel-guest-services">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--gst)"></div>
+        <div class="badge" style="background:var(--gst-bg);color:var(--gst)">D2 · Attendance</div>
+        <h3>Total Attendance FY24</h3><div class="card-val med">142,800</div>
+        <div class="card-delta delta-up">▲ 11.4% YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--gst)"></div>
+        <div class="badge" style="background:var(--gst-bg);color:var(--gst)">D4 · Experience</div>
+        <h3>NPS</h3><div class="card-val med">62</div>
+        <div class="card-delta delta-up">▲ +4 pts · Benchmark ≥50</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--gst)"></div>
+        <div class="badge" style="background:var(--gst-bg);color:var(--gst)">D2 · Attendance</div>
+        <h3>Avg Length of Stay</h3><div class="card-val med">2.3 hrs</div>
+        <div class="card-delta delta-up">▲ Target &gt;2 hrs ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--gst)"></div>
+        <div class="badge" style="background:var(--gst-bg);color:var(--gst)">D2 · Attendance</div>
+        <h3>Membership Conversion</h3><div class="card-val med">6.2%</div>
+        <div class="card-delta delta-up">▲ Target ≥5% ✓</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--gst)"></div>
+        <h3>Attendance Trend — Weekday / Weekend / Holiday — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="gstAttendChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--gst)"></div>
+        <h3>NPS · Wait Time · Resolution Time — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="gstNpsChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMUNITY ENGAGEMENT -->
+  <div class="dept-panels" id="panel-community-engagement">
+    <div class="g4">
+      <div class="card"><div class="card-accent" style="background:var(--com)"></div>
+        <div class="badge" style="background:var(--com-bg);color:var(--com)">D2 · Attendance</div>
+        <h3>Active Members</h3><div class="card-val med">8,240</div>
+        <div class="card-delta delta-up">▲ 14.2% YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--com)"></div>
+        <div class="badge" style="background:var(--com-bg);color:var(--com)">D2 · Attendance</div>
+        <h3>Renewal Rate</h3><div class="card-val med">68%</div>
+        <div class="card-delta delta-up">▲ Target ≥65% ✓</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--com)"></div>
+        <div class="badge" style="background:var(--com-bg);color:var(--com)">D1 · Financial</div>
+        <h3>Rental Revenue vs Budget</h3><div class="card-val med">+3.8%</div>
+        <div class="card-delta delta-up">▲ Ahead of plan</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--com)"></div>
+        <div class="badge" style="background:var(--com-bg);color:var(--com)">D4 · Experience</div>
+        <h3>Client Satisfaction</h3><div class="card-val med">4.3/5</div>
+        <div class="card-delta delta-up">▲ Target ≥4.0 ✓</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-accent" style="background:var(--com)"></div>
+        <h3>Membership Health — Active Count &amp; Renewal Rate — 4-Year</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="comMemberChart"></canvas></div>
+      </div>
+      <div class="card"><div class="card-accent" style="background:var(--com)"></div>
+        <h3>Revenue Portfolio Mix — FY2024</h3>
+        <div class="chart-wrap" style="height:200px"><canvas id="comRevChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AQUARIUM -->
+  <div class="dept-panels" id="panel-aquarium">
+    <div class="g3">
+      <div class="card"><div class="card-accent" style="background:var(--aqr)"></div>
+        <div class="badge" style="background:var(--aqr-bg);color:var(--aqr)">D1 · Financial</div>
+        <h3>Expenses vs Budget</h3><div class="card-val med">-0.8%</div>
+        <div class="card-delta delta-up">▲ Under budget</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--aqr)"></div>
+        <div class="badge" style="background:var(--aqr-bg);color:var(--aqr)">D3 · Programs</div>
+        <h3>Ambassador Interactions</h3><div class="card-val med">22,840</div>
+        <div class="card-delta delta-up">▲ 16.8% YoY</div></div>
+      <div class="card"><div class="card-accent" style="background:var(--aqr)"></div>
+        <div class="badge" style="background:var(--aqr-bg);color:var(--aqr)">D4 · Experience</div>
+        <h3>Zone Dwell Time</h3><div class="card-val med">18.4 min</div>
+        <div class="card-delta delta-up">▲ +2.1 min YoY</div></div>
+    </div>
+    <div class="card"><div class="card-accent" style="background:var(--aqr)"></div>
+      <h3>Aquarium Engagement — Ambassador Interactions &amp; Dwell Time — 4-Year</h3>
+      <div class="chart-wrap" style="height:220px"><canvas id="aqrChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════ LOB ════════════════════════════ -->
+<div class="dashboard" id="lob">
+  <div class="section-label">LOB — Operational Detail</div>
+  <div class="section-sub">Line-of-business metrics for department heads · Weekly / monthly cadence · All 134 KPIs</div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="tile-header"><div class="tile-icon" style="background:var(--mist)">📐</div>
+        <div><div class="tile-title">D5 · Fresh Service Resolution Rates — Cross-Dept <span class="new-badge">EXPANDED</span></div>
+        <div class="tile-sub">FY2022–2024 by department</div></div>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="lobResChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="tile-header"><div class="tile-icon" style="background:var(--mist)">👥</div>
+        <div><div class="tile-title">D6 · Turnover by Type &amp; Department <span class="new-badge">EXPANDED</span></div>
+        <div class="tile-sub">Voluntary vs. involuntary — FY2021–2024</div></div>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="lobTurnChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="tile-header"><div class="tile-icon" style="background:var(--mist)">🔒</div>
+        <div><div class="tile-title">IT Security &amp; Governance Overview <span class="new-badge">NEW</span></div>
+        <div class="tile-sub">Security incidents · Shadow IT · MTTR by severity</div></div>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="lobSecChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="tile-header"><div class="tile-icon" style="background:var(--mist)">🏗</div>
+        <div><div class="tile-title">Operations — Project Portfolio Status <span class="new-badge">NEW</span></div>
+        <div class="tile-sub">Active projects by status · Milestone completion</div></div>
+      </div>
+      <div class="chart-wrap" style="height:220px"><canvas id="lobProjChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tile-header"><div class="tile-icon" style="background:var(--mist)">🗂</div>
+      <div><div class="tile-title">Full LOB KPI Detail — All 134 Metrics</div>
+      <div class="tile-sub">Dept tile · Weight · FY24 · Target · Board roll-up · Status · New additions highlighted</div></div>
+    </div>
+    <table class="kpi-table">
+      <thead><tr><th>Department</th><th>Dept Tile</th><th>KPI</th><th>Wt</th><th>FY24</th><th>Target</th><th>Board</th><th>Status</th></tr></thead>
+      <tbody id="lobTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const YEARS=['FY21','FY22','FY23','FY24'];
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.plugins.legend.labels.boxWidth=11;
+Chart.defaults.plugins.legend.labels.padding=12;
+
+const lo=(yL='')=>({responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},beginAtZero:false,
+  title:{display:!!yL,text:yL,font:{size:10}}}}});
+const bo=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},beginAtZero:true}}});
+const po=()=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{padding:10,font:{size:10}}}}});
+const dual=(yL,y1L,y1Min,y1Max)=>({responsive:true,maintainAspectRatio:false,
+  interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{color:'#f0f0f0'}},
+    y:{grid:{color:'#f0f0f0'},title:{display:true,text:yL,font:{size:10}}},
+    y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:y1L,font:{size:10}},min:y1Min,max:y1Max}}});
+
+// ── BOARD CHARTS ──────────────────────────────────────────────
+new Chart('b1Chart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Budget Variance %',data:[0.8,-2.1,3.4,2.8],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.08)',tension:.4,yAxisID:'y'},
+  {label:'Per Cap ($)',data:[18.2,19.4,22.08,24.8],borderColor:'#1F3864',backgroundColor:'rgba(31,56,100,.06)',tension:.4,yAxisID:'y1'},
+  {label:'Rolling Forecast Variance %',data:[null,null,1.2,1.4],borderColor:'#2E5FA3',tension:.4,borderDash:[5,3],yAxisID:'y'}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Variance %',font:{size:10}}},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Per Cap ($)',font:{size:10}}}}}});
+
+new Chart('revMixChart',{type:'doughnut',data:{labels:['Earned Revenue','Contributed (Donations)','Contributed (Grants)'],
+  datasets:[{data:[61,28,11],backgroundColor:['#1F3864','#C9A84C','#7F5200'],borderWidth:0}]},
+  options:{...po(),cutout:'62%'}});
+
+new Chart('b2Chart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Students — Paid (000s)',data:[8.2,9.4,11.62,12.68],borderColor:'#375623',backgroundColor:'rgba(55,86,35,.08)',tension:.4,fill:true},
+  {label:'Students — Grant (000s)',data:[3.9,4.45,5.41,5.74],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.06)',tension:.4,fill:true},
+  {label:'Website Visitors (000s)',data:[198,228,240,284],borderColor:'#0D4D80',tension:.4}
+]},options:lo('(000s)')});
+
+new Chart('b2OutcomesChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Active Members',data:[5820,6490,7220,8240],backgroundColor:'rgba(91,45,142,.65)',yAxisID:'y'},
+  {label:'Renewal Rate %',data:[58,61,65,68],type:'line',borderColor:'#C9A84C',tension:.4,yAxisID:'y1',fill:false},
+  {label:'Assessment Improvement %',data:[null,58,68,74],type:'line',borderColor:'#375623',tension:.4,yAxisID:'y1',fill:false,borderDash:[5,3]}
+]},options:{...dual('Active Members','% Rate',40,90),scales:{x:{grid:{display:false}},
+  y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Active Members',font:{size:10}}},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'% Rate',font:{size:10}},min:40,max:90}}}});
+
+new Chart('b3Chart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'NPS',data:[44,50,58,62],borderColor:'#6B005A',backgroundColor:'rgba(107,0,90,.07)',tension:.4,yAxisID:'y'},
+  {label:'Satisfaction (1–5)',data:[4.0,4.1,4.3,4.4],borderColor:'#C9A84C',tension:.4,yAxisID:'y1',fill:false},
+  {label:'Avg Stay (hrs)',data:[1.8,1.9,2.1,2.3],borderColor:'#2E5FA3',tension:.4,yAxisID:'y1',fill:false,borderDash:[4,3]},
+  {label:'Exhibit Uptime %',data:[91.2,93.6,95.4,96.8],borderColor:'#375623',tension:.4,yAxisID:'y'}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'NPS / Uptime %',font:{size:10}},min:30},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Sat / Stay',font:{size:10}},min:1,max:6}}}});
+
+new Chart('b5Chart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Turnover Rate %',data:[35,31,29,28],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4},
+  {label:'Safety Incident Rate',data:[4.8,3.9,3.1,2.8],borderColor:'#e36209',tension:.4,fill:false,borderDash:[5,3]},
+  {label:'Compliance Training %',data:[null,null,79,88],borderColor:'#2E5FA3',tension:.4,fill:false},
+  {label:'Payroll % of Revenue',data:[null,null,48,46],borderColor:'#888',tension:.4,fill:false,borderDash:[3,2]}
+]},options:lo('%')});
+
+new Chart('b4Chart',{type:'bar',data:{labels:['Annual Fund','Capital (FY portion)','Endowment','Smarty Party','Grants'],datasets:[
+  {label:'FY22',data:[3.1,14.2,0.8,0.24,0.88],backgroundColor:'rgba(29,94,58,.3)'},
+  {label:'FY23',data:[3.5,16.8,1.1,0.27,0.96],backgroundColor:'rgba(29,94,58,.55)'},
+  {label:'FY24',data:[3.9,18.4,1.2,0.298,1.05],backgroundColor:'rgba(29,94,58,.85)'}
+]},options:{...bo(),scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'$M',font:{size:10}}}}}});
+
+// ── BOARD TABLE ────────────────────────────────────────────────
+const bRows=[
+  ['B1','var(--b1-bg)','var(--b1)','Finance & HR','Org Budget vs. Actual','+2.8%','≥0%','30%','on-track'],
+  ['B1','var(--b1-bg)','var(--b1)','Finance & HR','Revenue Per Visitor (Per Cap)','$24.80','Budget','25%','on-track'],
+  ['B1','var(--b1-bg)','var(--b1)','Finance & HR','Revenue Mix — Earned %','61%','≥55%','25%','on-track'],
+  ['B1','var(--b1-bg)','var(--b1)','Finance & HR','Revenue vs. Rolling Forecast','+1.4%','≥0%','10%','on-track'],
+  ['B1','var(--b1-bg)','var(--b1)','Operations','Project Budget vs. Actual','-0.8%','≤0%','10%','on-track'],
+  ['B2','var(--b2-bg)','var(--b2)','Education','Students Served — Paid','12,680','Growth','20%','on-track'],
+  ['B2','var(--b2-bg)','var(--b2)','Education','Students Served — Grant','5,740','≥ Commitment','15%','on-track'],
+  ['B2','var(--b2-bg)','var(--b2)','Education','Pre/Post Assessment Improvement','74%','≥70%','10%','on-track'],
+  ['B2','var(--b2-bg)','var(--b2)','Education','Outcomes by Program & Grant','81%','≥80%','10%','on-track'],
+  ['B2','var(--b2-bg)','var(--b2)','Comm. Engagement','Active Member Count','8,240','Growth','25%','on-track'],
+  ['B2','var(--b2-bg)','var(--b2)','Comm. Engagement','Membership Renewal Rate','68%','≥65%','15%','on-track'],
+  ['B3','var(--b3-bg)','var(--b3)','Guest Services','Net Promoter Score (NPS)','62','≥50','35%','on-track'],
+  ['B3','var(--b3-bg)','var(--b3)','Guest Services','Avg Length of Stay','2.3 hrs','>2 hrs','20%','on-track'],
+  ['B3','var(--b3-bg)','var(--b3)','Exhibits','Exhibit Uptime Rate','96.8%','≥95%','15%','on-track'],
+  ['B4','var(--b4-bg)','var(--b4)','Development','Annual Contributed Revenue','93% to goal','100%','20%','at-risk'],
+  ['B4','var(--b4-bg)','var(--b4)','Development','Capital Campaign Progress','89%','$140M','20%','at-risk'],
+  ['B4','var(--b4-bg)','var(--b4)','Development','Grant Revenue','$1.05M','$1.1M','10%','at-risk'],
+  ['B4','var(--b4-bg)','var(--b4)','Development','VIP Visits Identified','9/12 QTD','12/qtr','5%','at-risk'],
+  ['B4','var(--b4-bg)','var(--b4)','Development','Impact Metrics (Students/Outcomes)','18,420 / 74%','Growth','5%','on-track'],
+  ['B5','var(--b5-bg)','var(--b5)','Finance & HR','Employee Turnover Rate','28%','≤26%','30%','off-track'],
+  ['B5','var(--b5-bg)','var(--b5)','Finance & HR','Voluntary vs Involuntary Split','20% vol / 8% inv','Monitor','10%','at-risk'],
+  ['B5','var(--b5-bg)','var(--b5)','Finance & HR','Compliance Training Status','88%','100%','10%','off-track'],
+  ['B5','var(--b5-bg)','var(--b5)','Finance & HR','Payroll as % of Revenue','46%','≤48%','10%','on-track'],
+  ['B5','var(--b5-bg)','var(--b5)','Operations','Safety Incident Rate (OSHA)','2.8','<3.5','40%','on-track'],
+];
+const bTbl=document.getElementById('boardTable');
+bRows.forEach(r=>{
+  const [t,tbg,tclr,d,k,v,tgt,w,st]=r;
+  const stL=st==='on-track'?'On Track':st==='at-risk'?'At Risk':'Off Track';
+  bTbl.innerHTML+=`<tr>
+    <td><span class="badge" style="background:${tbg};color:${tclr}">${t}</span></td>
+    <td>${d}</td><td style="font-weight:500">${k}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${v}</td>
+    <td style="color:#888;font-size:.78rem">${tgt}</td>
+    <td><span class="weight-tag">${w}</span></td>
+    <td><span class="status-dot ${st}"></span>${stL}</td></tr>`;
+});
+
+// ── DEPT PANELS SETUP ─────────────────────────────────────────
+const depts=[
+  {id:'education',label:'Education',clr:'var(--edu)',bg:'var(--edu-bg)'},
+  {id:'exhibits',label:'Exhibits',clr:'var(--exh)',bg:'var(--exh-bg)'},
+  {id:'marketing',label:'Marketing',clr:'var(--mkt)',bg:'var(--mkt-bg)'},
+  {id:'community-engagement',label:'Community Engagement',clr:'var(--com)',bg:'var(--com-bg)'},
+  {id:'finance-hr',label:'Finance & HR',clr:'var(--fin)',bg:'var(--fin-bg)'},
+  {id:'operations',label:'Operations',clr:'var(--ops)',bg:'var(--ops-bg)'},
+  {id:'aquarium',label:'Aquarium',clr:'var(--aqr)',bg:'var(--aqr-bg)'},
+  {id:'development',label:'Development',clr:'var(--dev)',bg:'var(--dev-bg)'},
+  {id:'guest-services',label:'Guest Services',clr:'var(--gst)',bg:'var(--gst-bg)'},
+  {id:'it',label:'IT',clr:'var(--it)',bg:'var(--it-bg)'},
+];
+const pillsWrap=document.getElementById('deptPills');
+depts.forEach((d,i)=>{
+  const p=document.createElement('div');
+  p.className='dept-pill'+(i===0?' active':'');
+  p.textContent=d.label; p.style.color=d.clr; p.style.background=d.bg;
+  p.onclick=()=>switchDept(d.id,p);
+  pillsWrap.appendChild(p);
+});
+function switchDept(id,el){
+  document.querySelectorAll('.dept-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.dept-panels').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const panel=document.getElementById('panel-'+id);
+  if(panel){panel.classList.add('active');panel.classList.add('fade-in');}
+}
+
+// ── EDUCATION CHARTS ──────────────────────────────────────────
+new Chart('eduStudentsChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Paid Students (000s)',data:[8.2,9.4,11.62,12.68],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true},
+  {label:'Grant-Funded Students (000s)',data:[3.9,4.45,5.41,5.74],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.07)',tension:.4,fill:true},
+  {label:'Return Rate %',data:[24,27,30,33],borderColor:'#6B005A',tension:.4,borderDash:[5,3],yAxisID:'y1',fill:false}
+]},options:{...dual('Students (000s)','Return Rate %',0,50)}});
+
+new Chart('eduOutcomesChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Services Delivered vs Sched %',data:[null,91,94,97.2],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4},
+  {label:'Pre/Post Improvement Rate %',data:[null,58,68,74],borderColor:'#C9A84C',tension:.4,borderDash:[5,3]},
+  {label:'Outcomes Achievement %',data:[null,null,72,81],borderColor:'#375623',tension:.4}
+]},options:lo('%')});
+
+new Chart('eduResourceChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Educator Utilization %',data:[null,71,76,79],backgroundColor:'rgba(31,73,125,.65)',yAxisID:'y'},
+  {label:'Room Utilization %',data:[null,61,68,74],backgroundColor:'rgba(201,168,76,.65)',yAxisID:'y'},
+  {label:'Scheduling Conflicts (count)',data:[null,18,12,7],type:'line',borderColor:'#d73a49',tension:.4,yAxisID:'y1',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Utilization %',font:{size:10}}},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Conflicts',font:{size:10}},min:0,max:25}}}});
+
+new Chart('eduGrantChart',{type:'bar',data:{labels:['Grant A','Grant B','Grant C','Grant D','Grant E'],datasets:[
+  {label:'Committed ($K)',data:[280,180,140,95,60],backgroundColor:'rgba(31,73,125,.25)'},
+  {label:'Delivered ($K)',data:[271,174,132,90,58],backgroundColor:'rgba(31,73,125,.75)'},
+  {label:'Reimbursed ($K)',data:[258,168,128,88,55],backgroundColor:'rgba(201,168,76,.75)'}
+]},options:{...bo(),scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'$K',font:{size:10}}}}}});
+
+// ── DEVELOPMENT CHARTS ────────────────────────────────────────
+new Chart('devTrendChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Annual Fund ($M)',data:[2.8,3.1,3.5,3.9],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4},
+  {label:'Capital Campaign FY ($M)',data:[12.4,14.2,16.8,18.4],borderColor:'#C9A84C',tension:.4,fill:false},
+  {label:'Grant Revenue ($M)',data:[0.72,0.88,0.96,1.05],borderColor:'#2E5FA3',tension:.4,fill:false,borderDash:[5,3]}
+]},options:lo('$M')});
+
+new Chart('devDonorChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Donor Retention Rate %',data:[55,58,61,64],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4},
+  {label:'Lapsed Re-engagement %',data:[null,null,8.2,11.4],borderColor:'#C9A84C',tension:.4,fill:false,borderDash:[5,3]},
+  {label:'Donor Recapture % (≥2yr)',data:[null,null,3.1,4.8],borderColor:'#2E5FA3',tension:.4,fill:false,borderDash:[3,2]},
+  {label:'Avg Gift Size ($)',data:[680,880,1060,1240],borderColor:'#375623',tension:.4,yAxisID:'y1',fill:false}
+]},options:{...dual('% Rate','Avg Gift ($)',0,1800)}});
+
+new Chart('devMixChart',{type:'doughnut',data:{labels:['Capital Campaign','Annual Fund','Grants','Smarty Party','Endowment','Member→Donor'],
+  datasets:[{data:[68,17,5,4,4,2],backgroundColor:['#6B5500','#9B7E00','#C9A84C','#E8D080','#F5EAB8','#2E5FA3'],borderWidth:0}]},
+  options:{...po(),cutout:'55%'}});
+
+new Chart('devCampaignChart',{type:'bar',data:{labels:['Annual Fund','Gala / Smarty Party','Corporate Sponsorship','Grant Pipeline'],datasets:[
+  {label:'Goal',data:[4.2,0.32,0.85,1.1],backgroundColor:'rgba(29,94,58,.2)'},
+  {label:'FY24 Actual',data:[3.9,0.298,0.74,1.05],backgroundColor:'rgba(29,94,58,.8)'}
+]},options:{...bo(),scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'$M',font:{size:10}}}}}});
+
+// ── FINANCE & HR CHARTS ───────────────────────────────────────
+new Chart('finRevChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Revenue Budget ($M)',data:[8.2,8.8,9.4,10.1],borderColor:'rgba(127,0,0,.3)',tension:.4,borderDash:[5,3]},
+  {label:'Revenue Actual ($M)',data:[8.1,8.6,9.72,10.38],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.06)',tension:.4,fill:true},
+  {label:'Rolling Forecast ($M)',data:[null,null,9.6,10.52],borderColor:'#C9A84C',tension:.4,borderDash:[4,2]}
+]},options:lo('$M')});
+
+new Chart('finMixChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Earned Revenue %',data:[54,55,58,61],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.08)',tension:.4,fill:true},
+  {label:'Contributed %',data:[46,45,42,39],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.05)',tension:.4,fill:true}
+]},options:{...lo('%'),scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},min:30,max:75}}}});
+
+new Chart('finHrChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Total Turnover %',data:[35,31,29,28],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4},
+  {label:'Voluntary %',data:[null,null,21,20],borderColor:'#e36209',tension:.4,fill:false,borderDash:[5,3]},
+  {label:'Involuntary %',data:[null,null,8,8],borderColor:'#888',tension:.4,fill:false,borderDash:[3,2]},
+  {label:'Headcount vs Plan (FTE gap)',data:[null,null,-4,-6],borderColor:'#d73a49',tension:.4,yAxisID:'y1',fill:false}
+]},options:{...dual('Turnover %','FTE Gap',-10,2)}});
+
+new Chart('finPayrollChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Payroll % of Revenue',data:[null,null,48,46],backgroundColor:'rgba(127,0,0,.55)',yAxisID:'y'},
+  {label:'OT Ratio % Payroll',data:[6.4,5.8,5.1,4.6],backgroundColor:'rgba(201,168,76,.65)',yAxisID:'y'},
+  {label:'Compliance Training %',data:[null,null,79,88],type:'line',borderColor:'#2E5FA3',tension:.4,yAxisID:'y1',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'%',font:{size:10}},min:0,max:60},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Training %',font:{size:10}},min:60,max:105}}}});
+
+// ── OPERATIONS CHARTS ─────────────────────────────────────────
+new Chart('opsSafetyChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Safety Incident Rate (OSHA)',data:[4.8,3.9,3.1,2.8],borderColor:'#d73a49',backgroundColor:'rgba(215,58,73,.08)',tension:.4},
+  {label:'Ticket Resolution Rate %',data:[82,86,90,91.8],borderColor:'#1D5E3A',tension:.4,fill:false}
+]},options:lo()});
+
+new Chart('opsTicketChart',{type:'bar',data:{labels:['Facilities','Exhibits','IT','Other'],datasets:[
+  {label:'Planned Work Orders',data:[142,68,54,22],backgroundColor:'rgba(29,94,58,.55)'},
+  {label:'Emergency/Unplanned',data:[28,18,14,8],backgroundColor:'rgba(215,58,73,.65)'}
+]},options:{...bo(),scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Ticket Count',font:{size:10}}}}}});
+
+new Chart('opsProjChart',{type:'bar',data:{labels:['Expansion Phase 2','HVAC Upgrade','AV Systems','Signage Refresh','Parking Lot','IT Infrastructure'],datasets:[
+  {label:'Budget ($K)',data:[2800,480,320,145,210,380],backgroundColor:'rgba(29,94,58,.2)'},
+  {label:'Actual ($K)',data:[2680,472,298,141,208,412],backgroundColor:'rgba(29,94,58,.75)'}
+]},options:{...bo(),indexAxis:'y',scales:{x:{grid:{color:'#f0f0f0'},title:{display:true,text:'$K',font:{size:10}}},y:{grid:{display:false}}}}});
+
+new Chart('opsAreaChart',{type:'doughnut',data:{labels:['Main Hall','Gallery A','Gallery B','Aquarium Wing','Outdoor','Admin'],
+  datasets:[{data:[28,22,18,16,10,6],backgroundColor:['#1D5E3A','#2E7D52','#4CAF50','#81C784','#C8E6C9','#C9A84C'],borderWidth:0}]},
+  options:{...po(),cutout:'55%'}});
+
+// ── MARKETING CHARTS ──────────────────────────────────────────
+new Chart('mktFunnelChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Unique Visitors (000s)',data:[198,228,240,284],borderColor:'#7F4F24',backgroundColor:'rgba(127,79,36,.07)',tension:.4,yAxisID:'y'},
+  {label:'Ticket Conversion %',data:[2.8,3.4,4.1,4.8],borderColor:'#C9A84C',tension:.4,fill:false,yAxisID:'y1'},
+  {label:'Mktg-Influenced Admissions %',data:[null,52,57,62],borderColor:'#2E5FA3',tension:.4,fill:false,yAxisID:'y1',borderDash:[5,3]}
+]},options:{...dual('Visitors (000s)','% Rate',0,12)}});
+
+new Chart('mktCostChart',{type:'bar',data:{labels:['Paid Search','Social Ads','Email','Outdoor/Print','Partner','Organic'],datasets:[
+  {label:'FY23 Cost per Admission ($)',data:[7.2,6.8,2.1,9.4,3.8,0],backgroundColor:'rgba(127,79,36,.4)'},
+  {label:'FY24 Cost per Admission ($)',data:[5.8,5.4,1.9,8.2,3.2,0],backgroundColor:'rgba(127,79,36,.8)'}
+]},options:{...bo(),scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'$ per Admission',font:{size:10}}}}}});
+
+new Chart('mktSegChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Families Engagement Score',data:[null,62,68,74],borderColor:'#7F4F24',backgroundColor:'rgba(127,79,36,.08)',tension:.4},
+  {label:'Repeat Visitors Engagement',data:[null,58,64,71],borderColor:'#C9A84C',tension:.4,fill:false,borderDash:[5,3]},
+  {label:'Camp Participants Engagement',data:[null,70,76,82],borderColor:'#2E5FA3',tension:.4,fill:false,borderDash:[3,2]}
+]},options:lo('Engagement Score (0–100)')});
+
+new Chart('mktMixChart',{type:'pie',data:{labels:['Ticket Sales Online','Class/Program Registrations','Memberships Digital','Product/Gift Shop','Other'],
+  datasets:[{data:[52,22,16,7,3],backgroundColor:['#7F4F24','#A66B36','#CC9060','#E8B892','#F5D8C0'],borderWidth:0}]},options:po()});
+
+// ── IT CHARTS ─────────────────────────────────────────────────
+new Chart('itUptimeChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'POS Uptime %',data:[91.4,93.8,96.1,97.8],borderColor:'#2C2C2C',backgroundColor:'rgba(44,44,44,.07)',tension:.4},
+  {label:'Ticketing Uptime %',data:[93.2,95.0,96.8,98.1],borderColor:'#2E5FA3',tension:.4,fill:false},
+  {label:'HR/Finance Uptime %',data:[96.0,97.2,97.9,98.6],borderColor:'#22863a',tension:.4,fill:false,borderDash:[5,3]},
+  {label:'Network Uptime %',data:[null,null,98.4,99.1],borderColor:'#C9A84C',tension:.4,fill:false,borderDash:[3,2]},
+  {label:'Help-Desk Resolution %',data:[80,84,89,92.1],borderColor:'#888',tension:.4,fill:false}
+]},options:{...lo('%'),scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},min:75}}}});
+
+new Chart('itIncidentChart',{type:'bar',data:{labels:['Hardware','Software','Access/Perms','Network','Application'],datasets:[
+  {label:'P1/P2 (Critical)',data:[2,4,1,0,3],backgroundColor:'rgba(215,58,73,.75)'},
+  {label:'P3 (Moderate)',data:[14,22,18,8,16],backgroundColor:'rgba(227,98,9,.65)'},
+  {label:'P4 (Minor)',data:[38,46,52,22,34],backgroundColor:'rgba(44,44,44,.35)'}
+]},options:{...bo(),scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f0f0f0'},title:{display:true,text:'Ticket Count',font:{size:10}}}}}});
+
+new Chart('itSecurityChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Security Incidents (Total)',data:[null,12,8,5],borderColor:'#d73a49',backgroundColor:'rgba(215,58,73,.07)',tension:.4},
+  {label:'Shadow IT Apps Detected',data:[null,24,18,11],borderColor:'#e36209',tension:.4,fill:false,borderDash:[5,3]},
+  {label:'P1/P2 Security Incidents',data:[null,1,0,0],borderColor:'#7F0000',tension:.4,fill:false}
+]},options:{...lo('Count'),scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},min:0,beginAtZero:true}}}});
+
+new Chart('itExpansionChart',{type:'bar',data:{labels:['FY22','FY23','FY24'],datasets:[
+  {label:'Cloud Systems',data:[8,14,22],backgroundColor:'rgba(46,95,163,.7)'},
+  {label:'On-Premises Systems',data:[34,28,18],backgroundColor:'rgba(44,44,44,.55)'},
+  {label:'SPOFs — Unmitigated',data:[6,4,2],type:'line',borderColor:'#d73a49',tension:.4,yAxisID:'y1',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f0f0f0'},title:{display:true,text:'System Count',font:{size:10}}},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'SPOFs',font:{size:10}},min:0,max:10}}}});
+
+// ── EXHIBITS CHARTS ───────────────────────────────────────────
+new Chart('exhUptimeChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Uptime %',data:[91.2,93.6,95.4,96.8],borderColor:'#375623',backgroundColor:'rgba(55,86,35,.08)',tension:.4,yAxisID:'y'},
+  {label:'MTTR (hrs)',data:[3.2,2.6,1.9,1.4],borderColor:'#e36209',tension:.4,fill:false,yAxisID:'y1',borderDash:[5,3]}
+]},options:{...dual('Uptime %','MTTR (hrs)',0,5)}});
+
+new Chart('exhEngageChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Space Utilisation %',data:[68,74,79,83],backgroundColor:'rgba(55,86,35,.65)',yAxisID:'y'},
+  {label:'Interaction Rate %',data:[52,58,63,68],type:'line',borderColor:'#C9A84C',tension:.4,yAxisID:'y',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},min:40}}}});
+
+// ── GUEST SERVICES CHARTS ─────────────────────────────────────
+new Chart('gstAttendChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Weekday',data:[38400,42600,48200,54300],backgroundColor:'rgba(107,0,90,.4)'},
+  {label:'Weekend',data:[52800,56800,63400,70200],backgroundColor:'rgba(107,0,90,.65)'},
+  {label:'Holiday',data:[16200,13000,16600,18300],backgroundColor:'rgba(107,0,90,.85)'}
+]},options:{...bo(),scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f0f0f0'}}}}});
+
+new Chart('gstNpsChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'NPS Score',data:[44,50,58,62],borderColor:'#6B005A',backgroundColor:'rgba(107,0,90,.08)',tension:.4,yAxisID:'y'},
+  {label:'Avg Wait Time (min)',data:[18,14,11,8.5],borderColor:'#e36209',tension:.4,fill:false,yAxisID:'y1',borderDash:[5,3]},
+  {label:'Complaint Resolution (hrs)',data:[36,28,24,19],borderColor:'#888',tension:.4,fill:false,yAxisID:'y1',borderDash:[3,2]}
+]},options:{...dual('NPS','Hours / Minutes',0,45)}});
+
+// ── COMMUNITY ENGAGEMENT CHARTS ───────────────────────────────
+new Chart('comMemberChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Active Members',data:[5820,6490,7220,8240],backgroundColor:'rgba(91,45,142,.65)',yAxisID:'y'},
+  {label:'Renewal Rate %',data:[58,61,65,68],type:'line',borderColor:'#C9A84C',tension:.4,yAxisID:'y1',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Active Members',font:{size:10}}},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Renewal %',font:{size:10}},min:50,max:80}}}});
+
+new Chart('comRevChart',{type:'doughnut',data:{labels:['Memberships','Facility Rentals','Birthday Parties','Event Sponsorships','Other'],
+  datasets:[{data:[48,24,14,10,4],backgroundColor:['#5B2D8E','#7A47B0','#9E6FD0','#C9A4EE','#E8D8F8'],borderWidth:0}]},
+  options:{...po(),cutout:'55%'}});
+
+// ── AQUARIUM CHART ────────────────────────────────────────────
+new Chart('aqrChart',{type:'bar',data:{labels:YEARS,datasets:[
+  {label:'Ambassador Interactions (000s)',data:[14.2,16.8,19.6,22.84],backgroundColor:'rgba(13,77,128,.65)',yAxisID:'y'},
+  {label:'Zone Dwell Time (min)',data:[13.8,15.2,16.3,18.4],type:'line',borderColor:'#C9A84C',tension:.4,yAxisID:'y1',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Interactions (000s)',font:{size:10}}},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'Dwell (min)',font:{size:10}},min:0}}}});
+
+// ── LOB CHARTS ────────────────────────────────────────────────
+new Chart('lobResChart',{type:'bar',data:{labels:['Exhibits','Operations','IT','Guest Svcs','Education','Marketing'],datasets:[
+  {label:'FY22',data:[88,82,84,78,80,75],backgroundColor:'rgba(31,56,100,.3)'},
+  {label:'FY23',data:[93,88,89,85,86,81],backgroundColor:'rgba(31,56,100,.55)'},
+  {label:'FY24',data:[97.1,91.8,92.1,89,88,86],backgroundColor:'rgba(31,56,100,.85)'}
+]},options:{...bo(),scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},min:70,title:{display:true,text:'% Resolved ≤24h',font:{size:10}}}}}});
+
+new Chart('lobTurnChart',{type:'line',data:{labels:YEARS,datasets:[
+  {label:'Guest Services',data:[44,39,34,31],borderColor:'#6B005A',tension:.4},
+  {label:'Education',data:[28,26,24,22],borderColor:'#1F497D',tension:.4},
+  {label:'Operations',data:[32,30,27,25],borderColor:'#1D5E3A',tension:.4},
+  {label:'Finance & HR',data:[22,20,19,18],borderColor:'#7F0000',tension:.4},
+  {label:'Development',data:[30,28,25,22],borderColor:'#6B5500',tension:.4,borderDash:[5,3]},
+  {label:'IT',data:[26,24,22,20],borderColor:'#2C2C2C',tension:.4,borderDash:[3,2]}
+]},options:{...lo('%'),scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},min:10}}}});
+
+new Chart('lobSecChart',{type:'bar',data:{labels:['FY22','FY23','FY24'],datasets:[
+  {label:'Total Security Incidents',data:[12,8,5],backgroundColor:'rgba(215,58,73,.65)',yAxisID:'y'},
+  {label:'Shadow IT Apps',data:[24,18,11],backgroundColor:'rgba(227,98,9,.55)',yAxisID:'y'},
+  {label:'MTTR — P1/P2 (hrs)',data:[null,6.2,4.1],type:'line',borderColor:'#2C2C2C',tension:.4,yAxisID:'y1',fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},
+  scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'Count',font:{size:10}},min:0},
+  y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'MTTR (hrs)',font:{size:10}},min:0,max:12}}}});
+
+new Chart('lobProjChart',{type:'bar',data:{labels:['On Track','At Risk','Delayed','On Hold','Completed'],datasets:[
+  {label:'Q3 FY24',data:[7,2,1,1,0],backgroundColor:['#22863a','#e36209','#d73a49','#888','#2E5FA3']}
+]},options:{...bo(),plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f0f0f0'},title:{display:true,text:'# Projects',font:{size:10}},max:10}}}});
+
+// ── LOB TABLE ─────────────────────────────────────────────────
+const lobData=[
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D1',k:'Education Revenue vs Budget',w:'30%',v:'+6.2%',tgt:'≥0%',b:'B1',st:'on-track',nw:false},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D1',k:'Grant Reimbursement Status',w:'20%',v:'$18K aging',tgt:'<$50K',b:'B1*',st:'on-track',nw:true},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D1',k:'Grant Commitments (Booked/Del/Rem)',w:'20%',v:'96%',tgt:'≥95%',b:'B2',st:'on-track',nw:true},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D3',k:'Students Served — Paid',w:'15%',v:'12,680',tgt:'Growth',b:'B2',st:'on-track',nw:false},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D3',k:'Students Served — Grant-Funded',w:'17%',v:'5,740',tgt:'≥ Commitment',b:'B2',st:'on-track',nw:false},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D3',k:'Services Delivered vs Scheduled',w:'10%',v:'97.2%',tgt:'≥95%',b:'—',st:'on-track',nw:true},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D3',k:'Pre/Post Assessment Improvement',w:'8%',v:'74%',tgt:'≥70%',b:'B2',st:'on-track',nw:true},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D3',k:'Outcomes by Program & Grant',w:'8%',v:'81%',tgt:'≥80%',b:'B2',st:'on-track',nw:true},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D5',k:'Room & Equipment Utilization',w:'25%',v:'74%',tgt:'≥70%',b:'—',st:'on-track',nw:true},
+  {d:'Education',dc:'var(--edu)',db:'var(--edu-bg)',t:'D6',k:'Educator Utilization Rate',w:'20%',v:'79%',tgt:'75–85%',b:'—',st:'on-track',nw:true},
+  {d:'Development',dc:'var(--dev)',db:'var(--dev-bg)',t:'D7',k:'Annual Contributed Revenue',w:'20%',v:'93% to goal',tgt:'100%',b:'B4',st:'at-risk',nw:false},
+  {d:'Development',dc:'var(--dev)',db:'var(--dev-bg)',t:'D7',k:'Capital Campaign Progress',w:'15%',v:'89%',tgt:'$140M',b:'B4',st:'at-risk',nw:false},
+  {d:'Development',dc:'var(--dev)',db:'var(--dev-bg)',t:'D7',k:'Avg Gift Size',w:'5%',v:'$1,240',tgt:'Growth',b:'B4',st:'on-track',nw:true},
+  {d:'Development',dc:'var(--dev)',db:'var(--dev-bg)',t:'D7',k:'Lapsed Donor Re-engagement',w:'4%',v:'11.4%',tgt:'≥10%',b:'—',st:'on-track',nw:true},
+  {d:'Development',dc:'var(--dev)',db:'var(--dev-bg)',t:'D7',k:'VIP Visits Identified',w:'3%',v:'9/12 QTD',tgt:'12/qtr',b:'B4',st:'at-risk',nw:true},
+  {d:'Development',dc:'var(--dev)',db:'var(--dev-bg)',t:'D7',k:'Grant Delivery vs Commitment',w:'5%',v:'96%',tgt:'≥95%',b:'B4',st:'on-track',nw:true},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D1',k:'Org Budget vs Actual',w:'20%',v:'+2.8%',tgt:'≥0%',b:'B1',st:'on-track',nw:false},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D1',k:'Revenue vs Rolling Forecast',w:'15%',v:'+1.4%',tgt:'≥0%',b:'B1',st:'on-track',nw:true},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D1',k:'Time to Close',w:'5%',v:'5.8 days',tgt:'≤5 days',b:'—',st:'at-risk',nw:true},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D6',k:'Total Turnover Rate',w:'25%',v:'28%',tgt:'≤26%',b:'B5',st:'off-track',nw:false},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D6',k:'Voluntary vs Involuntary Split',w:'15%',v:'20%/8%',tgt:'Monitor',b:'B5',st:'at-risk',nw:true},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D6',k:'Headcount vs Plan',w:'10%',v:'-6 FTE',tgt:'0 variance',b:'B5',st:'off-track',nw:true},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D6',k:'Compliance Training Status',w:'5%',v:'88%',tgt:'100%',b:'B5',st:'off-track',nw:true},
+  {d:'Finance & HR',dc:'var(--fin)',db:'var(--fin-bg)',t:'D6',k:'Payroll % of Revenue',w:'10%',v:'46%',tgt:'≤48%',b:'B5',st:'on-track',nw:true},
+  {d:'Operations',dc:'var(--ops)',db:'var(--ops-bg)',t:'D1',k:'Ops Expenses vs Budget',w:'30%',v:'-1.4%',tgt:'≤0%',b:'B1',st:'on-track',nw:false},
+  {d:'Operations',dc:'var(--ops)',db:'var(--ops-bg)',t:'D1',k:'Project Spend vs Budget',w:'30%',v:'-0.8%',tgt:'≤0%',b:'B1',st:'on-track',nw:true},
+  {d:'Operations',dc:'var(--ops)',db:'var(--ops-bg)',t:'D5',k:'Safety Incident Rate',w:'20%',v:'2.8',tgt:'<3.5',b:'B5',st:'on-track',nw:false},
+  {d:'Operations',dc:'var(--ops)',db:'var(--ops-bg)',t:'D5',k:'Open Ticket Count',w:'10%',v:'34',tgt:'<40',b:'—',st:'on-track',nw:true},
+  {d:'Operations',dc:'var(--ops)',db:'var(--ops-bg)',t:'D5',k:'Emergency Work Request %',w:'5%',v:'19%',tgt:'<20%',b:'—',st:'at-risk',nw:true},
+  {d:'Operations',dc:'var(--ops)',db:'var(--ops-bg)',t:'D5',k:'Project Milestone Completion',w:'10%',v:'86%',tgt:'≥90%',b:'B1',st:'at-risk',nw:true},
+  {d:'Marketing',dc:'var(--mkt)',db:'var(--mkt-bg)',t:'D8',k:'Website-to-Ticket Conversion',w:'15%',v:'4.8%',tgt:'Growth',b:'B1',st:'on-track',nw:false},
+  {d:'Marketing',dc:'var(--mkt)',db:'var(--mkt-bg)',t:'D8',k:'Mktg-Influenced Admissions',w:'10%',v:'62%',tgt:'Growth',b:'B1',st:'on-track',nw:true},
+  {d:'Marketing',dc:'var(--mkt)',db:'var(--mkt-bg)',t:'D8',k:'Cost per Admission (blended)',w:'10%',v:'$4.20',tgt:'↓ YoY',b:'B1',st:'on-track',nw:true},
+  {d:'Marketing',dc:'var(--mkt)',db:'var(--mkt-bg)',t:'D8',k:'Campaign-to-Visit Conversion',w:'15%',v:'3.8%',tgt:'Growth',b:'B2',st:'on-track',nw:true},
+  {d:'Marketing',dc:'var(--mkt)',db:'var(--mkt-bg)',t:'D8',k:'Post-Event Re-engagement Rate',w:'5%',v:'18%',tgt:'Growth',b:'—',st:'on-track',nw:true},
+  {d:'IT',dc:'var(--it)',db:'var(--it-bg)',t:'D5',k:'Core System Uptime',w:'25%',v:'97.4%',tgt:'≥95%',b:'B1*',st:'on-track',nw:false},
+  {d:'IT',dc:'var(--it)',db:'var(--it-bg)',t:'D5',k:'Network Uptime',w:'15%',v:'99.1%',tgt:'≥99%',b:'—',st:'on-track',nw:true},
+  {d:'IT',dc:'var(--it)',db:'var(--it-bg)',t:'D5',k:'Security Incidents (P1/P2)',w:'10%',v:'0',tgt:'Zero P1',b:'B5*',st:'on-track',nw:true},
+  {d:'IT',dc:'var(--it)',db:'var(--it-bg)',t:'D5',k:'Integration Health',w:'5%',v:'94%',tgt:'100%',b:'B1*',st:'at-risk',nw:true},
+  {d:'IT',dc:'var(--it)',db:'var(--it-bg)',t:'D5',k:'SPOF — Unmitigated Count',w:'5%',v:'2',tgt:'→ 0',b:'B5*',st:'at-risk',nw:true},
+  {d:'Exhibits',dc:'var(--exh)',db:'var(--exh-bg)',t:'D5',k:'Exhibit Uptime Rate',w:'35%',v:'96.8%',tgt:'≥95%',b:'B3',st:'on-track',nw:false},
+  {d:'Exhibits',dc:'var(--exh)',db:'var(--exh-bg)',t:'D5',k:'MTTR',w:'20%',v:'1.4 hrs',tgt:'<2 hrs',b:'—',st:'on-track',nw:false},
+  {d:'Guest Services',dc:'var(--gst)',db:'var(--gst-bg)',t:'D4',k:'Net Promoter Score',w:'40%',v:'62',tgt:'≥50',b:'B3',st:'on-track',nw:false},
+  {d:'Guest Services',dc:'var(--gst)',db:'var(--gst-bg)',t:'D2',k:'Total Attendance',w:'25%',v:'142,800',tgt:'Growth',b:'B2',st:'on-track',nw:false},
+  {d:'Guest Services',dc:'var(--gst)',db:'var(--gst-bg)',t:'D4',k:'Avg Wait Time',w:'15%',v:'8.5 min',tgt:'<10 min',b:'—',st:'on-track',nw:false},
+  {d:'Comm. Engagement',dc:'var(--com)',db:'var(--com-bg)',t:'D2',k:'Active Members',w:'30%',v:'8,240',tgt:'Growth',b:'B2',st:'on-track',nw:false},
+  {d:'Comm. Engagement',dc:'var(--com)',db:'var(--com-bg)',t:'D2',k:'Membership Renewal Rate',w:'25%',v:'68%',tgt:'≥65%',b:'B2',st:'on-track',nw:false},
+  {d:'Aquarium',dc:'var(--aqr)',db:'var(--aqr-bg)',t:'D3',k:'Ambassador Interactions',w:'50%',v:'22,840',tgt:'Growth',b:'B2',st:'on-track',nw:false},
+];
+
+const lTbl=document.getElementById('lobTable');
+lobData.forEach(r=>{
+  const stL=r.st==='on-track'?'On Track':r.st==='at-risk'?'At Risk':'Off Track';
+  lTbl.innerHTML+=`<tr>
+    <td><span class="badge" style="background:${r.db};color:${r.dc}">${r.d}</span></td>
+    <td><span class="badge" style="background:var(--mist);color:var(--navy)">${r.t}</span></td>
+    <td style="font-weight:500;font-size:.78rem">${r.k}${r.nw?'<span class="new-badge">NEW</span>':''}</td>
+    <td style="text-align:center"><span class="weight-tag">${r.w}</span></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:.76rem">${r.v}</td>
+    <td style="color:#888;font-size:.76rem">${r.tgt}</td>
+    <td style="color:var(--navy);font-size:.76rem;font-weight:500">${r.b}</td>
+    <td><span class="status-dot ${r.st}"></span>${stL}</td></tr>`;
+});
+
+// ── LEVEL SWITCHER ────────────────────────────────────────────
+function switchLevel(id,el){
+  document.querySelectorAll('.level-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.dashboard').forEach(d=>d.classList.remove('active'));
+  el.classList.add('active');
+  const p=document.getElementById(id);
+  if(p){p.classList.add('active');p.classList.add('fade-in');}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DRILL ENGINE  v4
+// ═══════════════════════════════════════════════════════════════
+
+// ── Complete KPI metadata ─────────────────────────────────────
+const M = {
+  // ── BOARD TILES ──────────────────────────────────────────────
+  B1:{ _type:'tile', id:'B1', name:'Financial Health & Sustainability', clr:'#7F5200', bg:'#FFF9E6',
+    desc:'Tracks the organization\'s consolidated financial position — budget performance, revenue efficiency, revenue mix, and rolling forecast accuracy across all departments.',
+    weight:'Org Budget vs Actual (30%) · Per Cap (25%) · Revenue Mix (25%) · Rolling Forecast (10%) · Project Spend (10%)',
+    metrics:['fin-budget','fin-percap','fin-mix','fin-forecast','ops-projbudget'],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Budget Variance %',data:[0.8,-2.1,3.4,2.8],borderColor:'#7F5200',backgroundColor:'rgba(127,82,0,.07)',tension:.4,fill:true},
+      {label:'Per Cap ($)',data:[18.2,19.4,22.1,24.8],borderColor:'#C9A84C',tension:.4,borderDash:[5,3]}]}},
+
+  B2:{ _type:'tile', id:'B2', name:'Mission Impact & Reach', clr:'#375623', bg:'#EBF3E8',
+    desc:'Measures the breadth and depth of educational and community mission delivery — students served, membership health, program outcomes, and community reach.',
+    weight:'Students Paid (20%) · Students Grant (15%) · Active Members (25%) · Renewal Rate (15%) · Program Growth (15%) · Assessment (10%)',
+    metrics:['edu-paid','edu-grant','edu-assessment','edu-outcomes','com-members','com-renewal'],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Total Students (000s)',data:[12.1,13.85,17.03,18.42],borderColor:'#375623',backgroundColor:'rgba(55,86,35,.07)',tension:.4,fill:true},
+      {label:'Active Members (000s)',data:[5.82,6.49,7.22,8.24],borderColor:'#C9A84C',tension:.4,borderDash:[5,3]}]}},
+
+  B3:{ _type:'tile', id:'B3', name:'Guest Experience', clr:'#6B005A', bg:'#FDE8F5',
+    desc:'Measures the quality and depth of the visitor experience — satisfaction, loyalty, dwell time, exhibit availability, and engagement across all touchpoints.',
+    weight:'NPS (35%) · Length of Stay (20%) · Dwell Time per Exhibit (20%) · Exhibit Uptime (15%) · Education Satisfaction (20%)',
+    metrics:['gst-nps','gst-los','exh-uptime','exh-dwell','edu-sat'],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'NPS',data:[44,50,58,62],borderColor:'#6B005A',backgroundColor:'rgba(107,0,90,.07)',tension:.4,fill:true},
+      {label:'Avg Stay (hrs)',data:[1.8,1.9,2.1,2.3],borderColor:'#C9A84C',tension:.4,borderDash:[5,3]}]}},
+
+  B4:{ _type:'tile', id:'B4', name:'Fundraising & Campaign Progress', clr:'#1D5E3A', bg:'#E8FAF0',
+    desc:'Tracks all contributed revenue streams, multi-year campaign progress, major gift pipeline, grant management, and donor relationship health.',
+    weight:'Annual Fund (20%) · Capital Campaign (20%) · Grant Revenue (10%) · Campaign by Type (10%) · Member→Donor (15%) · VIP Visits (5%) · Avg Gift (5%) · Impact Metrics (5%)',
+    metrics:['dev-annual','dev-capital','dev-grants','dev-vip','dev-avgift','com-m2d'],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Total Contributed ($M)',data:[5.8,6.6,7.8,8.4],borderColor:'#1D5E3A',backgroundColor:'rgba(29,94,58,.07)',tension:.4,fill:true},
+      {label:'Donor Retention %',data:[52,55,58,61],borderColor:'#C9A84C',tension:.4,borderDash:[5,3]}]}},
+
+  B5:{ _type:'tile', id:'B5', name:'People & Organizational Health', clr:'#7F0000', bg:'#FFF0F0',
+    desc:'Tracks workforce stability, safety, compliance, and organizational capacity — the operational foundation that enables mission delivery.',
+    weight:'Safety Incident Rate (40%) · Turnover Rate (30%) · Voluntary/Involuntary Split (10%) · Compliance Training (10%) · Headcount vs Plan (10%)',
+    metrics:['ops-safety','fin-turnover','fin-voluntary','fin-compliance','fin-headcount'],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Turnover Rate %',data:[35,31,29,28],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4,fill:true},
+      {label:'Safety Incident Rate',data:[4.8,3.9,3.1,2.8],borderColor:'#e36209',tension:.4,borderDash:[5,3]}]}},
+
+  // ── KPI METRICS ──────────────────────────────────────────────
+  'fin-budget':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D1 · Financial Snapshot', board:'B1 (30%)', name:'Org Budget vs. Actual',
+    val:'FY24: +2.8%', target:'≥ 0%', status:'on',
+    desc:'Consolidated P&L — all revenue and expense lines vs. approved budget. Monthly, YTD, and full-year forecast. Primary financial accountability metric for the organization.',
+    formula:'Org Variance $ = Total Actual Revenue/Expense − Total Budget\nVariance % = Variance $ ÷ Total Budget × 100',
+    history:[['FY21','+0.8%'],['FY22','−2.1%'],['FY23','+3.4%'],['FY24','+2.8%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Budget Variance %',data:[0.8,-2.1,3.4,2.8],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4,fill:true},
+      {label:'Zero line',data:[0,0,0,0],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'fin-percap':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D1 · Financial Snapshot', board:'B1 (25%)', name:'Revenue Per Visitor (Per Cap)',
+    val:'FY24: $24.80', target:'≥ Budget', status:'on',
+    desc:'Total earned revenue ÷ total paid admissions. Tracks in-venue spend efficiency and pricing power. Compared to prior year and budget.',
+    formula:'Per Cap = Total Earned Revenue ÷ Total Paid Admissions',
+    history:[['FY21','$18.20'],['FY22','$19.40'],['FY23','$22.08'],['FY24','$24.80']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Per Cap ($)',data:[18.2,19.4,22.08,24.8],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4,fill:true}]}},
+
+  'fin-mix':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D1 · Financial Snapshot', board:'B1 (25%)', name:'Revenue Mix — Earned vs. Contributed',
+    val:'FY24: 61% Earned', target:'≥ 55% Earned', status:'on',
+    desc:'% of total revenue from earned sources (admissions, programs, rentals) vs. contributed (donations, grants). Monitors revenue diversification and long-term sustainability risk.',
+    formula:'Earned % = Earned Revenue ÷ Total Revenue × 100\nContributed % = Contributed Revenue ÷ Total Revenue × 100',
+    history:[['FY21','54% earned'],['FY22','55%'],['FY23','58%'],['FY24','61%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Earned %',data:[54,55,58,61],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4,fill:true},
+      {label:'Target (55%)',data:[55,55,55,55],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'fin-forecast':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D1 · Financial Snapshot', board:'B1 (10%)', name:'Revenue vs. Rolling Forecast',
+    val:'FY24: +1.4% ahead', target:'≥ 0%', status:'on',
+    desc:'Compares actual revenue to rolling forecast (updated monthly) rather than only static budget. Provides current-trajectory view for board and leadership.',
+    formula:'Forecast Variance $ = Actual Revenue − Rolling Forecast\nFull-Year Projection = YTD Actual + Remaining Period Forecast',
+    history:[['FY23 Q3','+0.6%'],['FY23 Q4','+0.8%'],['FY24 Q1','+1.1%'],['FY24 Q2','+1.4%']],
+    trend:{labels:['FY23 Q3','FY23 Q4','FY24 Q1','FY24 Q2'],datasets:[
+      {label:'Forecast Variance %',data:[0.6,0.8,1.1,1.4],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.07)',tension:.4,fill:true}]}},
+
+  'ops-projbudget':{ _type:'kpi', dept:'Operations', deptClr:'#1D5E3A', deptBg:'#E8FAF0',
+    tile:'D1 · Financial Snapshot', board:'B1 (10%)', name:'Project Budget vs. Actual Spend',
+    val:'FY24: −0.8% (under budget)', target:'≤ 0%', status:'on',
+    desc:'Tracks spend vs. approved budget for each active capital or operations project. Flags cost overruns early. Particularly important in post-expansion period.',
+    formula:'Project Variance $ = Actual Spend − Approved Budget\nVariance % = Variance $ ÷ Approved Budget × 100',
+    history:[['FY22','+3.2%'],['FY23','+1.8%'],['FY24','−0.8%']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'Project Budget Variance %',data:[3.2,1.8,-0.8],borderColor:'#1D5E3A',backgroundColor:'rgba(29,94,58,.07)',tension:.4,fill:true},
+      {label:'Target (0%)',data:[0,0,0],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'edu-paid':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D3 · Programs', board:'B2 (20%)', name:'Students Served — Paid Programs',
+    val:'FY24: 12,680', target:'YoY Growth', status:'on',
+    desc:'Unduplicated headcount of students in fee-based programs (camps, field trips, STEM nights, home school, GEMs). Reflects earned revenue demand and market reach. Tracked separately from grant students.',
+    formula:'Paid Students = Σ (headcount across all paid program types per period)\nYoY Growth % = (Current − Prior Year) ÷ Prior Year × 100',
+    history:[['FY21','8,200'],['FY22','9,400'],['FY23','11,620'],['FY24','12,680']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Paid Students (000s)',data:[8.2,9.4,11.62,12.68],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true}]}},
+
+  'edu-grant':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D3 · Programs', board:'B2 (15%)', name:'Students Served — Grant-Funded',
+    val:'FY24: 5,740', target:'≥ Grant Commitment', status:'on',
+    desc:'Unduplicated headcount in grant-funded programs. Reflects mission reach to underserved populations and funder compliance. Tracked separately — non-delivery triggers grant compliance risk and potential claw-back.',
+    formula:'Grant Students = Σ (headcount across all grant programs per period)\nGrant Compliance Rate = Students Served ÷ Grant Commitment × 100',
+    history:[['FY21','3,900'],['FY22','4,450'],['FY23','5,410'],['FY24','5,740']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Grant Students (000s)',data:[3.9,4.45,5.41,5.74],borderColor:'#C9A84C',backgroundColor:'rgba(201,168,76,.08)',tension:.4,fill:true}]}},
+
+  'edu-delivered':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D3 · Programs', board:'Not surfaced directly (impacts B2 via Students Served)', name:'Services Delivered vs. Scheduled',
+    val:'FY24: 97.2%', target:'≥ 95%', status:'on',
+    desc:'% of planned program sessions actually delivered. Enrollment alone does not capture whether programs ran. Flags cancellations, no-shows, and operational gaps that directly reduce mission output.',
+    formula:'Delivery Rate % = Sessions Delivered ÷ Sessions Scheduled × 100\nCancellation Rate % = 1 − Delivery Rate',
+    history:[['FY22','91%'],['FY23','94%'],['FY24','97.2%']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'Delivery Rate %',data:[91,94,97.2],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true},
+      {label:'Target (95%)',data:[95,95,95],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'edu-assessment':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D3 · Learning Outcomes', board:'B2 (10%)', name:'Pre/Post Assessment Improvement Rate',
+    val:'FY24: 74%', target:'≥ 70%', status:'on',
+    desc:'Most direct measure of educational effectiveness. % of participants showing measurable learning gain between pre- and post-program assessments. Goes beyond satisfaction scores to measure actual outcomes.',
+    formula:'Improvement Rate % = Participants with Post > Pre Score ÷ Total Assessed × 100\nAvg Gain = Mean (Post Score − Pre Score)',
+    history:[['FY22','58%'],['FY23','68%'],['FY24','74%']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'Improvement Rate %',data:[58,68,74],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true},
+      {label:'Target (70%)',data:[70,70,70],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'edu-outcomes':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D3 · Learning Outcomes', board:'B2 (10%)', name:'Outcomes by Program & Grant',
+    val:'FY24: 81% of programs meeting ≥80% objectives', target:'≥ 80%', status:'on',
+    desc:'% of programs and grants meeting their stated educational objectives. Funder accountability at grant level; curriculum improvement signal at program level.',
+    formula:'Outcome Achievement % = Objectives Met ÷ Total Stated Objectives × 100\nAgg: % of programs/grants meeting ≥80% of objectives',
+    history:[['FY23','72%'],['FY24','81%']],
+    trend:{labels:['FY23 H1','FY23 H2','FY24 H1','FY24 H2'],datasets:[
+      {label:'Outcomes Achievement %',data:[68,72,77,81],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true}]}},
+
+  'edu-sat':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D4 · Guest Experience', board:'B3 (20%)', name:'Program Satisfaction Score',
+    val:'FY24: 4.4 / 5', target:'≥ 4.2', status:'on',
+    desc:'Average post-program survey rating on a 1–5 scale, broken out by program type. Captures perceived experience quality — distinct from outcome achievement.',
+    formula:'Score = Σ (all survey ratings) ÷ Total Responses\nNormalized for tile: (Score − 1) ÷ 4 × 100',
+    history:[['FY21','4.1'],['FY22','4.2'],['FY23','4.3'],['FY24','4.4']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Satisfaction Score',data:[4.1,4.2,4.3,4.4],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true},
+      {label:'Target (4.2)',data:[4.2,4.2,4.2,4.2],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'edu-grant-reimburse':{ _type:'kpi', dept:'Education', deptClr:'#1F497D', deptBg:'#E8F4FD',
+    tile:'D1 · Grant Management', board:'B1 (escalation only)', name:'Grant Reimbursement Status',
+    val:'FY24: $18K aging receivable', target:'< $50K outstanding', status:'on',
+    desc:'Tracks submitted grant reimbursement requests vs. amounts received. Unreimbursed grants create working capital pressure. Escalates to board B1 tile if aging exceeds 90 days.',
+    formula:'Outstanding $ = Total Awarded − Total Reimbursed to Date\nAging = Days since reimbursement request submitted per grant',
+    history:[['FY23 Q2','$68K'],['FY23 Q4','$42K'],['FY24 Q2','$31K'],['FY24 Q3','$18K']],
+    trend:{labels:['FY23 Q2','FY23 Q4','FY24 Q2','FY24 Q3'],datasets:[
+      {label:'Outstanding Reimbursement ($K)',data:[68,42,31,18],borderColor:'#1F497D',backgroundColor:'rgba(31,73,125,.08)',tension:.4,fill:true},
+      {label:'Threshold ($50K)',data:[50,50,50,50],borderColor:'#d73a49',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'gst-nps':{ _type:'kpi', dept:'Guest Services', deptClr:'#6B005A', deptBg:'#FDE8F5',
+    tile:'D4 · Guest Experience', board:'B3 (35%)', name:'Net Promoter Score (NPS)',
+    val:'FY24: 62', target:'≥ 50 (cultural venue benchmark)', status:'on',
+    desc:'Gold-standard guest loyalty metric. Highest-weight KPI at both department (40%) and board (35%) level. % Promoters (9–10) minus % Detractors (0–6). Benchmark of 50+ for cultural attractions.',
+    formula:'NPS = % Promoters − % Detractors\nPromoter % = Respondents 9–10 ÷ Total × 100\nDetractor % = Respondents 0–6 ÷ Total × 100',
+    history:[['FY21','44'],['FY22','50'],['FY23','58'],['FY24','62']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'NPS',data:[44,50,58,62],borderColor:'#6B005A',backgroundColor:'rgba(107,0,90,.08)',tension:.4,fill:true},
+      {label:'Benchmark (50)',data:[50,50,50,50],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'gst-los':{ _type:'kpi', dept:'Guest Services', deptClr:'#6B005A', deptBg:'#FDE8F5',
+    tile:'D2 · Attendance', board:'B3 (20%)', name:'Avg Length of Stay',
+    val:'FY24: 2.3 hrs', target:'> 2 hours', status:'on',
+    desc:'Average total time on-property per visit (entry to exit). Indicates depth of engagement. Longer stays correlate with higher per-cap spend and better NPS scores.',
+    formula:'Avg Length of Stay = Σ (Exit Time − Entry Time per Visit) ÷ Total Visits',
+    history:[['FY21','1.8 hrs'],['FY22','1.9 hrs'],['FY23','2.1 hrs'],['FY24','2.3 hrs']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Avg Stay (hrs)',data:[1.8,1.9,2.1,2.3],borderColor:'#6B005A',backgroundColor:'rgba(107,0,90,.08)',tension:.4,fill:true},
+      {label:'Target (2 hrs)',data:[2,2,2,2],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'gst-attend':{ _type:'kpi', dept:'Guest Services', deptClr:'#6B005A', deptBg:'#FDE8F5',
+    tile:'D2 · Attendance', board:'B2 (context)', name:'Total Attendance',
+    val:'FY24: 142,800', target:'YoY Growth', status:'on',
+    desc:'Total paid and unpaid guest visits per period. Segmented by weekday/weekend/holiday and by demographic cohort. Primary volume metric for mission reach.',
+    formula:'Total Attendance = Σ (all gate entries per operating day)\nYoY Growth % = (Current − Prior Year) ÷ Prior Year × 100',
+    history:[['FY21','95,400'],['FY22','112,400'],['FY23','128,200'],['FY24','142,800']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Total Attendance (000s)',data:[95.4,112.4,128.2,142.8],borderColor:'#6B005A',backgroundColor:'rgba(107,0,90,.08)',tension:.4,fill:true}]}},
+
+  'exh-uptime':{ _type:'kpi', dept:'Exhibits', deptClr:'#375623', deptBg:'#EBF3E8',
+    tile:'D5 · Operational Efficiency', board:'B3 (15%)', name:'Exhibit Uptime Rate',
+    val:'FY24: 96.8%', target:'≥ 95%', status:'on',
+    desc:'% of scheduled operating hours all guest-facing exhibits are functional. Core guest-facing reliability metric. Directly impacts guest satisfaction, dwell time, and NPS.',
+    formula:'Uptime % = (Total Scheduled Hours − Downtime Hours) ÷ Total Scheduled Hours × 100',
+    history:[['FY21','91.2%'],['FY22','93.6%'],['FY23','95.4%'],['FY24','96.8%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Uptime %',data:[91.2,93.6,95.4,96.8],borderColor:'#375623',backgroundColor:'rgba(55,86,35,.08)',tension:.4,fill:true},
+      {label:'Target (95%)',data:[95,95,95,95],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'exh-dwell':{ _type:'kpi', dept:'Exhibits', deptClr:'#375623', deptBg:'#EBF3E8',
+    tile:'D2 · Attendance', board:'B3 (20%)', name:'Guest Dwell Time per Exhibit',
+    val:'FY24: 4.2 min avg', target:'YoY Growth', status:'on',
+    desc:'Average minutes a guest interacts with an individual exhibit. Higher dwell time indicates deeper engagement and exhibit quality. Tracked by sensor or observation data.',
+    formula:'Dwell Time = Σ (Time per Interaction) ÷ Total Interactions\nBy exhibit: ranked high/low for programming decisions',
+    history:[['FY21','3.0 min'],['FY22','3.4 min'],['FY23','3.6 min'],['FY24','4.2 min']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Avg Dwell Time (min)',data:[3.0,3.4,3.6,4.2],borderColor:'#375623',backgroundColor:'rgba(55,86,35,.08)',tension:.4,fill:true}]}},
+
+  'com-members':{ _type:'kpi', dept:'Community Engagement', deptClr:'#5B2D8E', deptBg:'#F3E8FF',
+    tile:'D2 · Attendance', board:'B2 (25%)', name:'Active Member Count',
+    val:'FY24: 8,240', target:'YoY Growth', status:'on',
+    desc:'Total active memberships at period-end by tier (individual, family, premium). Members are highest-frequency visitors and primary cultivation pipeline for donors. YoY growth trend.',
+    formula:'Active Members = Total memberships not expired or cancelled at period-end\nYoY Growth % = (Current − Prior Year) ÷ Prior Year × 100',
+    history:[['FY21','5,820'],['FY22','6,490'],['FY23','7,220'],['FY24','8,240']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Active Members',data:[5820,6490,7220,8240],borderColor:'#5B2D8E',backgroundColor:'rgba(91,45,142,.08)',tension:.4,fill:true}]}},
+
+  'com-renewal':{ _type:'kpi', dept:'Community Engagement', deptClr:'#5B2D8E', deptBg:'#F3E8FF',
+    tile:'D2 · Attendance', board:'B2 (15%)', name:'Membership Renewal Rate',
+    val:'FY24: 68%', target:'≥ 65%', status:'on',
+    desc:'Members renewing at expiration vs. total eligible. Retention is more cost-efficient than acquisition. Strong renewal rate signals programming quality and member satisfaction.',
+    formula:'Renewal Rate = Members Renewed ÷ Members Eligible for Renewal × 100',
+    history:[['FY21','58%'],['FY22','61%'],['FY23','65%'],['FY24','68%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Renewal Rate %',data:[58,61,65,68],borderColor:'#5B2D8E',backgroundColor:'rgba(91,45,142,.08)',tension:.4,fill:true},
+      {label:'Target (65%)',data:[65,65,65,65],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'com-m2d':{ _type:'kpi', dept:'Community Engagement', deptClr:'#5B2D8E', deptBg:'#F3E8FF',
+    tile:'D7 · Fundraising', board:'B4 (15%)', name:'Member-to-Donor Conversion Rate',
+    val:'FY24: 8.4%', target:'YoY Growth', status:'on',
+    desc:'Members who make a charitable gift ÷ total active members. Joint metric with Development. Key pipeline metric — members who convert to donors have significantly higher lifetime value.',
+    formula:'Conversion Rate = Member Donors ÷ Active Members × 100',
+    history:[['FY22','6.2%'],['FY23','7.2%'],['FY24','8.4%']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'M→D Conversion %',data:[6.2,7.2,8.4],borderColor:'#5B2D8E',backgroundColor:'rgba(91,45,142,.08)',tension:.4,fill:true}]}},
+
+  'dev-annual':{ _type:'kpi', dept:'Development', deptClr:'#6B5500', deptBg:'#FFFAE8',
+    tile:'D7 · Fundraising', board:'B4 (20%)', name:'Annual Contributed Revenue vs. Goal',
+    val:'FY24: $3.9M / $4.2M (93%)', target:'100% ($4.2M)', status:'risk',
+    desc:'YTD total contributed revenue (individual, corporate, foundation) vs. annual campaign goal. $300K gap with one quarter remaining. At risk of missing full-year goal.',
+    formula:'$ to Goal = Annual Goal − YTD Contributed Revenue\n% to Goal = YTD Contributed Revenue ÷ Annual Goal × 100',
+    history:[['FY21','$2.8M'],['FY22','$3.1M'],['FY23','$3.5M'],['FY24','$3.9M (93%)']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Annual Fund ($M)',data:[2.8,3.1,3.5,3.9],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4,fill:true},
+      {label:'FY24 Goal ($4.2M)',data:[null,null,null,4.2],borderColor:'#d73a49',borderDash:[4,3],tension:0}]}},
+
+  'dev-capital':{ _type:'kpi', dept:'Development', deptClr:'#6B5500', deptBg:'#FFFAE8',
+    tile:'D7 · Fundraising', board:'B4 (20%)', name:'Capital Campaign Progress ($140M)',
+    val:'FY24: $124.6M / 89% complete', target:'$140M total', status:'risk',
+    desc:'Cumulative pledges + payments vs. $140M goal. $15.4M remaining. VIP visits and major gift pipeline are the primary levers for closing the gap. Critical board metric until campaign closes.',
+    formula:'% Complete = Cumulative Raised ÷ $140M × 100\nRemaining Gap = $140M − Cumulative Raised',
+    history:[['FY21','74% ($103.6M)'],['FY22','80% ($112M)'],['FY23','85% ($119M)'],['FY24','89% ($124.6M)']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'% Complete',data:[74,80,85,89],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4,fill:true},
+      {label:'Goal (100%)',data:[100,100,100,100],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'dev-grants':{ _type:'kpi', dept:'Development', deptClr:'#6B5500', deptBg:'#FFFAE8',
+    tile:'D7 · Fundraising', board:'B4 (10%)', name:'Grant Revenue',
+    val:'FY24: $1.05M received / $1.1M goal', target:'$1.1M', status:'risk',
+    desc:'Pipeline: grants applied $ vs. awarded $ vs. cash received. Tracks yield rate and collection efficiency. Diversified contributed revenue stream distinct from individual giving.',
+    formula:'Yield Rate = $ Awarded ÷ $ Applied × 100\nCollection Rate = $ Received ÷ $ Awarded × 100',
+    history:[['FY21','$0.72M'],['FY22','$0.88M'],['FY23','$0.96M'],['FY24','$1.05M']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Grant Revenue ($M)',data:[0.72,0.88,0.96,1.05],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4,fill:true}]}},
+
+  'dev-vip':{ _type:'kpi', dept:'Development', deptClr:'#6B5500', deptBg:'#FFFAE8',
+    tile:'D7 · Stewardship', board:'B4 (5%)', name:'VIP Visits Identified',
+    val:'FY24: 9 / 12 QTD', target:'12 per quarter', status:'risk',
+    desc:'Count of major gift prospect visits per period. Leading indicator for gifts ≥ $10K. Critical for closing the remaining $15.4M on the capital campaign. 3 visits short of quarterly target.',
+    formula:'VIP Visits = # arranged major gift prospect visits per period\nPipeline = VIP Visits → Proposals Made → Gifts Closed',
+    history:[['Q1 FY24','10 / 12'],['Q2 FY24','11 / 12'],['Q3 FY24','9 / 12']],
+    trend:{labels:['Q1 FY24','Q2 FY24','Q3 FY24'],datasets:[
+      {label:'VIP Visits',data:[10,11,9],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4,fill:true},
+      {label:'Target (12)',data:[12,12,12],borderColor:'#d73a49',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'dev-avgift':{ _type:'kpi', dept:'Development', deptClr:'#6B5500', deptBg:'#FFFAE8',
+    tile:'D7 · Campaign Performance', board:'B4 (5%)', name:'Average Gift Size',
+    val:'FY24: $1,240', target:'YoY Growth', status:'on',
+    desc:'Average $ per gift per period by donor segment (individual, corporate, major gift ≥$10K). Upward trend signals donor upgrade potential and effective campaign messaging.',
+    formula:'Avg Gift = Total Contributions ÷ # of Gifts\nBy Segment: individual / corporate / major gift (≥$10K)',
+    history:[['FY22','$880'],['FY23','$1,060'],['FY24','$1,240']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'Avg Gift ($)',data:[880,1060,1240],borderColor:'#6B5500',backgroundColor:'rgba(107,85,0,.08)',tension:.4,fill:true}]}},
+
+  'fin-turnover':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D6 · People & Workforce', board:'B5 (30%)', name:'Employee Turnover Rate',
+    val:'FY24: 28%', target:'≤ 26% (sector avg)', status:'off',
+    desc:'Total separations ÷ avg headcount. Currently 2 pts above sector average. Guest Services (31%) and Operations (25%) are highest-burden departments. Voluntary vs. involuntary split tracked separately.',
+    formula:'Turnover Rate = Separations in Period ÷ Avg Headcount × 100\nSector benchmark: 26% for cultural/nonprofit venues',
+    history:[['FY21','35%'],['FY22','31%'],['FY23','29%'],['FY24','28%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Turnover Rate %',data:[35,31,29,28],borderColor:'#7F0000',backgroundColor:'rgba(127,0,0,.08)',tension:.4,fill:true},
+      {label:'Sector Benchmark (26%)',data:[26,26,26,26],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'fin-voluntary':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D6 · People & Workforce', board:'B5 (10%)', name:'Voluntary vs. Involuntary Turnover Split',
+    val:'FY24: 20% voluntary / 8% involuntary', target:'Monitor trend', status:'risk',
+    desc:'Separations broken out by type. Voluntary turnover (resignation, retirement) signals engagement or compensation issues. Involuntary (termination, layoff) signals hiring quality or performance management gaps.',
+    formula:'Voluntary Rate = Voluntary Separations ÷ Avg Headcount × 100\nInvoluntary Rate = Involuntary Separations ÷ Avg Headcount × 100',
+    history:[['FY23','21% vol / 8% inv'],['FY24','20% vol / 8% inv']],
+    trend:{labels:['FY23 Q1','FY23 Q2','FY23 Q3','FY24 Q1','FY24 Q2','FY24 Q3'],datasets:[
+      {label:'Voluntary %',data:[22,21,21,21,20,20],borderColor:'#e36209',backgroundColor:'rgba(227,98,9,.07)',tension:.4,fill:true},
+      {label:'Involuntary %',data:[9,8,8,8,8,8],borderColor:'#7F0000',tension:.4,fill:false,borderDash:[5,3]}]}},
+
+  'fin-compliance':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D6 · Workforce Readiness', board:'B5 (10%)', name:'Compliance Training Completion',
+    val:'FY24: 88%', target:'100%', status:'off',
+    desc:'% of employees current on all required compliance training (safety, harassment, data privacy). 12% of staff overdue. Directly linked to safety incident rate — noncompliant staff are a leading causal factor in workplace incidents.',
+    formula:'Compliance Rate % = Employees Current on All Required Training ÷ Total Employees × 100\nOverdue = # employees past required completion date by training type',
+    history:[['FY23 Q1','72%'],['FY23 Q3','79%'],['FY24 Q1','82%'],['FY24 Q3','88%']],
+    trend:{labels:['FY23 Q1','FY23 Q3','FY24 Q1','FY24 Q3'],datasets:[
+      {label:'Compliance %',data:[72,79,82,88],borderColor:'#2E5FA3',backgroundColor:'rgba(46,95,163,.08)',tension:.4,fill:true},
+      {label:'Target (100%)',data:[100,100,100,100],borderColor:'#d73a49',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'fin-headcount':{ _type:'kpi', dept:'Finance & HR', deptClr:'#7F0000', deptBg:'#FFF0F0',
+    tile:'D6 · Workforce Stability', board:'B5 (10%)', name:'Headcount vs. Plan',
+    val:'FY24: −6 FTE vs plan', target:'0 variance', status:'off',
+    desc:'Actual filled FTE positions vs. approved headcount plan by department. −6 FTE variance signals compounding vacancy risk — unfilled roles increase OT, reduce service capacity, and elevate turnover in remaining staff.',
+    formula:'Headcount Variance = Actual FTEs − Planned FTEs\nVariance % = Headcount Variance ÷ Planned FTEs × 100',
+    history:[['FY22','+1 FTE'],['FY23','−4 FTE'],['FY24','−6 FTE']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'FTE Variance vs Plan',data:[1,-4,-6],borderColor:'#d73a49',backgroundColor:'rgba(215,58,73,.08)',tension:.4,fill:true},
+      {label:'Target (0)',data:[0,0,0],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'ops-safety':{ _type:'kpi', dept:'Operations', deptClr:'#1D5E3A', deptBg:'#E8FAF0',
+    tile:'D5 · Operational Efficiency', board:'B5 (40%)', name:'Safety Incident Rate (OSHA)',
+    val:'FY24: 2.8', target:'< 3.5 (industry benchmark)', status:'on',
+    desc:'Highest-weight metric in B5. OSHA recordable incidents × 200,000 ÷ total hours worked. Declining trend is positive but compliance training completion (88%) is a leading risk indicator.',
+    formula:'OSHA Rate = (Recordable Incidents × 200,000) ÷ Total Hours Worked\nBenchmark: < 3.5 for cultural venues',
+    history:[['FY21','4.8'],['FY22','3.9'],['FY23','3.1'],['FY24','2.8']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'OSHA Rate',data:[4.8,3.9,3.1,2.8],borderColor:'#d73a49',backgroundColor:'rgba(215,58,73,.08)',tension:.4,fill:true},
+      {label:'Benchmark (3.5)',data:[3.5,3.5,3.5,3.5],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'ops-tickets':{ _type:'kpi', dept:'Operations', deptClr:'#1D5E3A', deptBg:'#E8FAF0',
+    tile:'D5 · Operational Efficiency', board:'Not surfaced', name:'Fresh Service Resolution Rate (90% SLA)',
+    val:'FY24: 91.8%', target:'≥ 90%', status:'on',
+    desc:'% of all Operations tickets closed within 24 hours. Responsiveness to facility issues affects all other departments. Tracked alongside open ticket count and avg resolution time.',
+    formula:'Resolution Rate = Tickets Closed ≤ 24 hrs ÷ Total Tickets × 100',
+    history:[['FY21','82%'],['FY22','86%'],['FY23','90%'],['FY24','91.8%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Resolution Rate %',data:[82,86,90,91.8],borderColor:'#1D5E3A',backgroundColor:'rgba(29,94,58,.08)',tension:.4,fill:true},
+      {label:'Target (90%)',data:[90,90,90,90],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'mkt-conversion':{ _type:'kpi', dept:'Marketing', deptClr:'#7F4F24', deptBg:'#FFF4E6',
+    tile:'D8 · Marketing & Digital Reach', board:'B1 (10%)', name:'Website-to-Ticket Conversion Rate',
+    val:'FY24: 4.8%', target:'YoY Growth', status:'on',
+    desc:'Online tickets sold ÷ unique website visitors. Highest-weight metric in the D8 tile. Directly links digital marketing to earned revenue. Improved from 4.1% in FY23.',
+    formula:'Conversion Rate = Online Tickets Sold ÷ Unique Visitors × 100',
+    history:[['FY21','2.8%'],['FY22','3.4%'],['FY23','4.1%'],['FY24','4.8%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Conversion Rate %',data:[2.8,3.4,4.1,4.8],borderColor:'#7F4F24',backgroundColor:'rgba(127,79,36,.08)',tension:.4,fill:true}]}},
+
+  'mkt-cost':{ _type:'kpi', dept:'Marketing', deptClr:'#7F4F24', deptBg:'#FFF4E6',
+    tile:'D8 · Marketing & Digital Reach', board:'B1 (5%)', name:'Cost per Admission by Channel',
+    val:'FY24: $4.20 blended', target:'↓ YoY', status:'on',
+    desc:'Total marketing spend per channel ÷ admissions attributable to that channel. Down from $5.60 in FY23. Email is most efficient ($1.90/admission); outdoor is least ($8.20). Enables budget reallocation.',
+    formula:'Cost per Admission = Channel Spend $ ÷ Channel-Attributed Admissions\nBlended = Total Mktg Spend ÷ Mktg-Influenced Admissions',
+    history:[['FY23','$5.60 blended'],['FY24','$4.20 blended']],
+    trend:{labels:['Paid Search','Social Ads','Email','Outdoor/Print','Partner'],datasets:[
+      {label:'FY23 Cost ($)',data:[7.2,6.8,2.1,9.4,3.8],borderColor:'rgba(127,79,36,.5)',tension:.4},
+      {label:'FY24 Cost ($)',data:[5.8,5.4,1.9,8.2,3.2],borderColor:'#7F4F24',backgroundColor:'rgba(127,79,36,.08)',tension:.4,fill:true}]}},
+
+  'it-uptime':{ _type:'kpi', dept:'IT', deptClr:'#2C2C2C', deptBg:'#F5F5F5',
+    tile:'D5 · Operational Efficiency', board:'B1 (escalation only)', name:'Core System Uptime (POS/Ticketing/HR)',
+    val:'FY24: 97.4% weighted avg', target:'≥ 95%', status:'on',
+    desc:'Weighted average uptime across core business systems: POS (40%), Ticketing (40%), HR/Finance (20%). Enters B1 board tile only if uptime falls below 95% threshold.',
+    formula:'Weighted Uptime = POS Uptime × 0.4 + Ticketing Uptime × 0.4 + HR/Finance × 0.2',
+    history:[['FY21','91.4% avg'],['FY22','93.8%'],['FY23','96.1%'],['FY24','97.4%']],
+    trend:{labels:['FY21','FY22','FY23','FY24'],datasets:[
+      {label:'Weighted Uptime %',data:[91.4,93.8,96.1,97.4],borderColor:'#2C2C2C',backgroundColor:'rgba(44,44,44,.07)',tension:.4,fill:true},
+      {label:'Target (95%)',data:[95,95,95,95],borderColor:'#aaa',borderDash:[4,3],tension:0,pointRadius:0}]}},
+
+  'it-security':{ _type:'kpi', dept:'IT', deptClr:'#2C2C2C', deptBg:'#F5F5F5',
+    tile:'D5 · Security & Governance', board:'B5 (escalation — P1/P2 only)', name:'Security Incidents',
+    val:'FY24: 0 P1/P2, 5 total', target:'Zero P1/P2 incidents', status:'on',
+    desc:'Count and severity of security incidents. POS and ticketing handle payment data — any P1/P2 breach escalates immediately to board outside normal reporting cycle. Shadow IT (11 apps) is a secondary risk.',
+    formula:'Incident Count by Severity = # incidents per P-level per period\nMTTD = Avg hours from incident start to detection',
+    history:[['FY22','12 total, 1 P2'],['FY23','8 total, 0 P1/P2'],['FY24','5 total, 0 P1/P2']],
+    trend:{labels:['FY22','FY23','FY24'],datasets:[
+      {label:'Total Security Incidents',data:[12,8,5],borderColor:'#d73a49',backgroundColor:'rgba(215,58,73,.08)',tension:.4,fill:true},
+      {label:'P1/P2 Incidents',data:[1,0,0],borderColor:'#7F0000',tension:.4,borderDash:[5,3],fill:false}]}},
+};
+
+// ── Panel state ───────────────────────────────────────────────
+let _chart=null, _history=[];
+
+function openPanel(id){ _history.push(id); renderPanel(id); show(); }
+function goBack(){ if(_history.length>1){_history.pop(); renderPanel(_history[_history.length-1]);} }
+function show(){ document.getElementById('drillOverlay').classList.add('open'); document.getElementById('drillPanel').classList.add('open'); document.body.style.overflow='hidden'; }
+function closePanel(){ document.getElementById('drillOverlay').classList.remove('open'); document.getElementById('drillPanel').classList.remove('open'); document.body.style.overflow=''; setTimeout(()=>{if(_chart){_chart.destroy();_chart=null;} _history=[];},320); }
+
+function renderPanel(id){
+  const d=M[id]; if(!d) return;
+  if(_chart){_chart.destroy();_chart=null;}
+  if(d._type==='tile') renderTile(d);
+  else renderKpi(d);
+}
+
+function bc(d){
+  if(_history.length<=1) return `<div class="dp-breadcrumb"><span class="crumb-active">${d._type==='tile'?'Board':'Department'} View</span></div>`;
+  return `<button class="dp-back" onclick="goBack()">← Back</button>`;
+}
+
+function statusPill(s){ const c=s==='on'?'on':s==='risk'?'risk':'off'; const l=s==='on'?'On Track':s==='risk'?'At Risk':'Off Track'; return `<span class="dp-status ${c}">${l}</span>`; }
+
+function renderTile(d){
+  const metas=d.metrics.map(k=>M[k]).filter(Boolean);
+  const counts={on:metas.filter(m=>m.status==='on').length, risk:metas.filter(m=>m.status==='risk').length, off:metas.filter(m=>m.status==='off').length};
+  const rows=metas.map(m=>`
+    <div class="dp-metric-row" onclick="openPanel('${d.metrics[metas.indexOf(m)]}')">
+      <div class="mr-left"><div class="mr-dept">${m.dept} · ${m.tile}</div><div class="mr-name">${m.name}</div></div>
+      <div class="mr-right"><div class="mr-val">${m.val}</div><div class="mr-wt">${statusPill(m.status)}</div></div>
+    </div>`).join('');
+
+  document.getElementById('dpBreadcrumb').innerHTML=bc(d);
+  document.getElementById('dpTitle').textContent=d.name;
+  document.getElementById('dpSub').textContent=`${d.id} · Board Dashboard Tile · ${metas.length} contributing metrics`;
+  document.getElementById('dpBody').innerHTML=`
+    <div class="dp-score-bar">
+      <div class="dp-score-pill on">✓ ${counts.on} On Track</div>
+      ${counts.risk?`<div class="dp-score-pill risk">⚠ ${counts.risk} At Risk</div>`:''}
+      ${counts.off?`<div class="dp-score-pill off">✗ ${counts.off} Off Track</div>`:''}
+    </div>
+    <div class="dp-section"><div class="dp-section-title">About this tile</div><div class="dp-desc">${d.desc}</div></div>
+    <div class="dp-section"><div class="dp-section-title">Weighting Formula</div><div class="dp-formula">${d.weight}</div></div>
+    <div class="dp-section"><div class="dp-section-title">Contributing Metrics — click any to drill in</div>${rows}</div>
+    <div class="dp-section"><div class="dp-section-title">4-Year Trend</div><div class="dp-chart"><canvas id="dpChart"></canvas></div></div>`;
+  setTimeout(()=>drawChart(d.trend),40);
+}
+
+function renderKpi(d){
+  const hist=d.history.map(([yr,v])=>`<div class="dp-kv"><div class="dp-kl">${yr}</div><div class="dp-kv-val">${v}</div></div>`).join('');
+  document.getElementById('dpBreadcrumb').innerHTML=bc(d);
+  document.getElementById('dpTitle').textContent=d.name;
+  document.getElementById('dpSub').textContent=`${d.dept} · ${d.tile}`;
+  document.getElementById('dpBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap">
+      ${statusPill(d.status)}
+      <span style="font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700">${d.val}</span>
+      <span style="font-size:.75rem;color:#aaa">Target: ${d.target}</span>
+    </div>
+    <div class="dp-section">
+      <div class="dp-kv"><div class="dp-kl">Tile Weight</div><div class="dp-kv-val"><span class="weight-tag">${d.tile.split('·')[0].trim()}</span> · ${(d.weight||'').split('(')[1]?d.weight:'See tile'}</div></div>
+      <div class="dp-kv"><div class="dp-kl">Board Roll-Up</div><div class="dp-kv-val">${d.board}</div></div>
+    </div>
+    <div class="dp-section"><div class="dp-section-title">What this measures</div><div class="dp-desc">${d.desc}</div></div>
+    <div class="dp-section"><div class="dp-section-title">Calculation Formula</div><div class="dp-formula">${d.formula}</div></div>
+    <div class="dp-section"><div class="dp-section-title">Historical Performance</div>${hist}</div>
+    <div class="dp-section"><div class="dp-section-title">Trend</div><div class="dp-chart"><canvas id="dpChart"></canvas></div></div>`;
+  setTimeout(()=>drawChart(d.trend),40);
+}
+
+function drawChart(trend){
+  if(!trend) return;
+  const ctx=document.getElementById('dpChart'); if(!ctx) return;
+  _chart=new Chart(ctx,{type:'line',data:trend,options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}},
+    scales:{x:{grid:{color:'#f0f0f0'}},y:{grid:{color:'#f0f0f0'},beginAtZero:false}}}});
+}
+
+// ── Chart point drill: show filtered metric table ─────────────
+function attachChartDrill(chartInstance, metrics, titleFn){
+  if(!chartInstance||!metrics) return;
+  chartInstance.options.onClick=(evt)=>{
+    const pts=chartInstance.getElementsAtEventForMode(evt,'nearest',{intersect:true},false);
+    if(!pts.length) return;
+    const pt=pts[0], label=chartInstance.data.labels[pt.index];
+    const val=chartInstance.data.datasets[pt.datasetIndex].data[pt.index];
+    const dsLabel=chartInstance.data.datasets[pt.datasetIndex].label;
+    showChartPoint(titleFn(label,dsLabel,val), metrics, label, pt.index);
+  };
+  chartInstance.update();
+}
+
+function showChartPoint(title, rows, label, idx){
+  _history=['_point'];
+  document.getElementById('dpBreadcrumb').innerHTML=`<button class="dp-back" onclick="closePanel()">← Close</button>`;
+  document.getElementById('dpTitle').textContent=title;
+  document.getElementById('dpSub').textContent=`Chart data point detail · ${label}`;
+  const tableRows=rows.map(r=>`<tr><td>${r.dept||''}</td><td style="font-weight:600">${r.kpi||r.name}</td><td style="font-family:'JetBrains Mono',monospace">${Array.isArray(r.vals)?r.vals[idx]||'—':r.val||'—'}</td><td>${r.target||'—'}</td><td><span class="status-dot ${r.st||r.status==='on'?'on-track':r.status==='risk'?'at-risk':'off-track'}"></span></td></tr>`).join('');
+  document.getElementById('dpBody').innerHTML=`
+    <div class="dp-section"><div class="dp-section-title">Metrics at ${label}</div>
+    <table class="dp-pt-table"><thead><tr><th>Dept</th><th>Metric</th><th>Value</th><th>Target</th><th></th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+  show();
+}
+
+// ── Register drillable items ──────────────────────────────────
+function initDrills(){
+  // Board tile cards
+  document.querySelectorAll('#board .card').forEach(card=>{
+    const b=card.querySelector('.badge'); if(!b) return;
+    const tid=b.textContent.trim().split('·')[0].trim();
+    if(!M[tid]||M[tid]._type!=='tile') return;
+    card.classList.add('drillable');
+    if(!card.querySelector('.drill-hint')){ const h=document.createElement('span'); h.className='drill-hint'; h.textContent='↗ Drill'; card.appendChild(h); }
+    card.onclick=()=>openPanel(tid);
+  });
+
+  // Dept KPI cards — map by h3 content
+  const cardMap={
+    'Revenue vs Budget':'fin-budget','Students — Paid':'edu-paid',
+    'Students — Grant':'edu-grant','Services Delivered':'edu-delivered',
+    'Pre/Post Assessment':'edu-assessment','Grant Delivery Rate':'edu-grant-reimburse',
+    'Annual Fund':'dev-annual','Capital Campaign':'dev-capital','VIP Visits':'dev-vip',
+    'Avg Gift Size':'dev-avgift','Turnover Rate':'fin-turnover',
+    'Compliance Training':'fin-compliance','Safety Incident Rate':'ops-safety',
+    'Ticket Resolution':'ops-tickets','Ticket Conversion Rate':'mkt-conversion',
+    'Cost per Admission':'mkt-cost','Core System Uptime':'it-uptime',
+    'Security Incidents':'it-security','NPS':'gst-nps',
+    'Avg Length of Stay':'gst-los','Total Attendance FY24':'gst-attend',
+    'Active Members':'com-members','Renewal Rate':'com-renewal',
+    'Exhibit Uptime':'exh-uptime','Avg Dwell Time':'exh-dwell',
+  };
+  document.querySelectorAll('.dept-panels .card').forEach(card=>{
+    const h=card.querySelector('h3'); if(!h) return;
+    const txt=h.textContent.replace('NEW','').trim();
+    const key=Object.keys(cardMap).find(k=>txt.includes(k));
+    if(!key) return;
+    card.classList.add('drillable');
+    if(!card.querySelector('.drill-hint')){ const hint=document.createElement('span'); hint.className='drill-hint'; hint.textContent='↗ Detail'; card.appendChild(hint); }
+    card.onclick=(e)=>{ if(e.target.closest('.chart-wrap')) return; openPanel(cardMap[key]); };
+  });
+
+  // Table rows
+  const rowMap={
+    'Org Budget vs. Actual':'fin-budget','Revenue Per Visitor':'fin-percap',
+    'Revenue Mix':'fin-mix','Revenue vs. Rolling Forecast':'fin-forecast',
+    'Students Served — Paid':'edu-paid','Students Served — Grant':'edu-grant',
+    'Pre/Post Assessment':'edu-assessment','Outcomes by Program':'edu-outcomes',
+    'Program Satisfaction':'edu-sat','Net Promoter Score':'gst-nps',
+    'Avg Length of Stay':'gst-los','Exhibit Uptime Rate':'exh-uptime',
+    'Annual Contributed Revenue':'dev-annual','Capital Campaign Progress':'dev-capital',
+    'Grant Revenue':'dev-grants','VIP Visits Identified':'dev-vip',
+    'Employee Turnover Rate':'fin-turnover','Voluntary vs. Involuntary':'fin-voluntary',
+    'Compliance Training':'fin-compliance','Headcount vs. Plan':'fin-headcount',
+    'Safety Incident Rate':'ops-safety','Core System Uptime':'it-uptime',
+    'Security Incidents':'it-security','Active Member Count':'com-members',
+    'Membership Renewal Rate':'com-renewal','Website-to-Ticket Conversion':'mkt-conversion',
+    'Mktg-Influenced Admissions':'mkt-conversion',
+  };
+  document.querySelectorAll('.kpi-table tbody tr').forEach(tr=>{
+    const cells=[...tr.querySelectorAll('td')];
+    const txt=cells.map(c=>c.textContent).join(' ');
+    const key=Object.keys(rowMap).find(k=>txt.includes(k));
+    if(!key) return;
+    tr.classList.add('drillable-row');
+    tr.onclick=()=>openPanel(rowMap[key]);
+  });
+}
+
+// Run after each panel switch to catch newly rendered content
+function switchDept(id,el){
+  document.querySelectorAll('.dept-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.dept-panels').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const panel=document.getElementById('panel-'+id);
+  if(panel){panel.classList.add('active');panel.classList.add('fade-in');}
+  setTimeout(initDrills,80);
+}
+
+// Board chart data-point drills
+function attachBoardChartDrills(){
+  // B1 chart — click point shows financial metrics for that year
+  const b1c=Chart.getChart('b1Chart');
+  if(b1c) b1c.options.onClick=(e)=>{
+    const pts=b1c.getElementsAtEventForMode(e,'nearest',{intersect:true},false);
+    if(!pts.length) return;
+    const yr=b1c.data.labels[pts[0].index];
+    showChartPoint(`Financial Health — ${yr}`,[
+      {dept:'Finance & HR',kpi:'Budget Variance %',vals:['+0.8%','−2.1%','+3.4%','+2.8%'],target:'≥0%',st:'on-track'},
+      {dept:'Finance & HR',kpi:'Per Cap ($)',vals:['$18.20','$19.40','$22.08','$24.80'],target:'Budget',st:'on-track'},
+      {dept:'Finance & HR',kpi:'Earned Revenue %',vals:['54%','55%','58%','61%'],target:'≥55%',st:'on-track'},
+    ], yr, pts[0].index);
+    b1c.update();
+  };
+
+  const b2c=Chart.getChart('b2Chart');
+  if(b2c) b2c.options.onClick=(e)=>{
+    const pts=b2c.getElementsAtEventForMode(e,'nearest',{intersect:true},false);
+    if(!pts.length) return;
+    const yr=b2c.data.labels[pts[0].index];
+    showChartPoint(`Mission Impact — ${yr}`,[
+      {dept:'Education',kpi:'Students — Paid (000s)',vals:['8.2','9.4','11.62','12.68'],target:'Growth',st:'on-track'},
+      {dept:'Education',kpi:'Students — Grant (000s)',vals:['3.9','4.45','5.41','5.74'],target:'≥Commit',st:'on-track'},
+      {dept:'Comm. Engagement',kpi:'Active Members',vals:['5,820','6,490','7,220','8,240'],target:'Growth',st:'on-track'},
+    ], yr, pts[0].index);
+    b2c.update();
+  };
+
+  const b5c=Chart.getChart('b5Chart');
+  if(b5c) b5c.options.onClick=(e)=>{
+    const pts=b5c.getElementsAtEventForMode(e,'nearest',{intersect:true},false);
+    if(!pts.length) return;
+    const yr=b5c.data.labels[pts[0].index];
+    showChartPoint(`People & Org Health — ${yr}`,[
+      {dept:'Finance & HR',kpi:'Turnover Rate %',vals:['35%','31%','29%','28%'],target:'≤26%',st:'off-track'},
+      {dept:'Operations',kpi:'Safety Incident Rate',vals:['4.8','3.9','3.1','2.8'],target:'<3.5',st:'on-track'},
+      {dept:'Finance & HR',kpi:'Compliance Training %',vals:['—','—','79%','88%'],target:'100%',st:'off-track'},
+    ], yr, pts[0].index);
+    b5c.update();
+  };
+
+  const b4c=Chart.getChart('b4Chart');
+  if(b4c) b4c.options.onClick=(e)=>{
+    const pts=b4c.getElementsAtEventForMode(e,'nearest',{intersect:true},false);
+    if(!pts.length) return;
+    const cat=b4c.data.labels[pts[0].index];
+    const ds=b4c.data.datasets[pts[0].datasetIndex];
+    showChartPoint(`Fundraising — ${cat} · ${ds.label}`,[
+      {dept:'Development',kpi:'FY22 ($M)',vals:b4c.data.datasets[0].data.map(String),target:'—',st:'on-track'},
+      {dept:'Development',kpi:'FY23 ($M)',vals:b4c.data.datasets[1].data.map(String),target:'—',st:'on-track'},
+      {dept:'Development',kpi:'FY24 ($M)',vals:b4c.data.datasets[2].data.map(String),target:'—',st:'on-track'},
+    ], cat, pts[0].index);
+    b4c.update();
+  };
+}
+
+window.addEventListener('load',()=>{
+  initDrills();
+  setTimeout(attachBoardChartDrills, 600);
+});
+</script>
+
+<!-- ── DRILL PANEL ─────────────────────────────────────────── -->
+<div id="drillOverlay" onclick="closePanel()"></div>
+<div id="drillPanel">
+  <div class="dp-header">
+    <div class="dp-header-inner">
+      <div id="dpBreadcrumb" class="dp-breadcrumb"></div>
+      <div id="dpTitle" class="dp-title"></div>
+      <div id="dpSub" class="dp-sub"></div>
+    </div>
+    <button class="dp-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="dp-body" id="dpBody"></div>
+</div>
+
+</body>
+</html>
